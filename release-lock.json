@@ -1,0 +1,12 @@
+{
+  "version": "8.1.25",
+  "baseline": "v8.1.25-no-sample-applications",
+  "sha256": {
+    "app.js": "1f5ccf3be1cc0e2a97bfd972f79b1dd0cea2cdcefcd35a84d0c495cc42cf6abb",
+    "data.js": "8bf9af6df6a8a97abbf09aec6c50804cfba4e5c10253833e4afbf09235f9c923",
+    "index.html": "2ebfc0db53bc08a53a94e8418db427aaf6b567c2b667359fab4d8a613a9c4e3c",
+    "styles.css": "f920f492d2b7ce5977474aa9910ec6803959df726e53b56393945c7a39303f59",
+    "sw.js": "e846b329fd3b7fafea4a5e409d2dda3e55768544e1872cce58b5b384651ff177",
+    "manifest.webmanifest": "7e733a620d10e6363660baac55acc13c860c1d8bb77821423623663a1908c5f7"
+  }
+}

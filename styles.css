@@ -1,0 +1,1341 @@
+/* ============================================================
+   취준 Radar — 모바일 앱 셸
+   · 8pt 그리드, 좌우 패딩 20px 고정, 최소 터치타겟 44px
+   · 색(hue)은 "전형 단계"에만. 중요도는 무채색 + 좌측 액센트 바로만.
+   ============================================================ */
+
+:root{
+  /* ═══ v8.0 디자인 토큰 ═══
+     여기 없는 값을 화면에서 새로 만들지 않는다. 필요하면 토큰을 늘린다. */
+
+  --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,
+         "Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+
+  /* ── 글자 6단계. 크기·굵기·행간이 한 몸이다 (font 축약형으로 강제) ── */
+  --t-hero: 700 23px/31px var(--font);   /* 홈 히어로 회사명 */
+  --t-title:700 20px/28px var(--font);   /* 앱바 제목 */
+  --t-sec:  650 17px/24px var(--font);   /* 섹션 헤더 */
+  --t-item: 600 15px/22px var(--font);   /* 목록 항목 제목 */
+  --t-sub:  450 13px/20px var(--font);   /* 부제 */
+  --t-meta: 600 12px/16px var(--font);   /* 배지·라벨·D-day·요일 */
+
+  /* ── 간격 6단계. 세로 여백은 반드시 이 중 하나 ── */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
+  --page-x:20px;                         /* 화면 좌우 기본축 */
+
+  /* ── 치수. 간격과 다른 축이다 (섞으면 38px·46px 이 다시 생긴다) ── */
+  --control-sm:32px; --control:40px; --input:48px; --tap-min:44px;
+  --ab:56px; --tb:58px;
+
+  /* ── 색: 역할 고정 ── */
+  --bg:#F2F4F6;
+  --surface:#FFFFFF;
+  --line:#EDEFF3;
+  --line-strong:#DDE1E6;
+  --ink:#15181C;
+  --ink-2:#4A515B;
+  --ink-3:#5F6873;
+  --ink-4:#66707A;
+  --action:#171C24;      /* 주요 액션 — generic blue 를 CTA 로 쓰지 않는다 */
+  --link:#1B64DA;        /* 링크·정보 */
+  --danger:#E5484D; --warn:#F5A524; --ok:#12A150;
+
+  /* ── 모서리: 숫자보다 «어디에 쓰는가» 가 규칙이다 ── */
+  --r1:8px;    /* 배지·칩 */
+  --r2:12px;   /* 버튼·입력 */
+  --r3:16px;   /* 히어로·바텀시트 */
+  --rf:999px;  /* 상태 칩 전용. 그 밖에 금지 */
+
+  /* 전형 단계 — 의미가 붙은 색이라 그대로 유지한다 */
+  --c-open-bg:#EEF1F5;   --c-open-fg:#5A6472;
+  --c-info-bg:#FFF3D6;   --c-info-fg:#8A5B00;
+  --c-apply-bg:#DDEBFF;  --c-apply-fg:#1758B8;
+  --c-result-bg:#EAE4FF; --c-result-fg:#5533C4;
+  --c-test-bg:#FFE6D2;   --c-test-fg:#9A4A12;
+  --c-inter-bg:#FFE1E1;  --c-inter-fg:#B02525;
+  --c-final-bg:#D6F5E3;  --c-final-fg:#0B7A42;
+  --c-cert-bg:#D3F5EE;   --c-cert-fg:#0B6B5C;
+
+  --shadow:0 1px 2px rgba(21,24,28,.04), 0 8px 24px rgba(21,24,28,.06);
+
+  /* 구버전 이름 — 화면을 v8 부품으로 바꾸는 동안만 남긴다 */
+  --ink2:var(--ink-2); --ink3:var(--ink-3); --ink4:var(--ink-4);
+  --line2:var(--line-strong); --accent:var(--action); --pad:var(--page-x);
+  --r-sm:var(--r1); --r:var(--r2); --r-lg:var(--r3); --r-xl:var(--r3);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font);
+  font-size:15px; font-weight:400; line-height:1.55; letter-spacing:-.006em;
+  font-synthesis:none;
+  font-variant-numeric:tabular-nums;
+  text-rendering:optimizeLegibility;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior-y:none;
+}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.012em}
+p{margin:0}
+svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;
+    stroke-linecap:round;stroke-linejoin:round}
+[hidden]{display:none!important}
+
+/* ─────────── 셸 ─────────── */
+.app{max-width:560px;margin:0 auto;min-height:100dvh;background:var(--bg);
+     position:relative;box-shadow:0 0 0 1px rgba(25,31,40,.04)}
+@media(min-width:561px){ body{background:#E8EBEF} .app{background:var(--bg)} }
+
+.appbar{
+  position:fixed;top:0;left:0;right:0;z-index:40;height:calc(var(--ab) + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 8px 0;
+  display:flex;align-items:center;gap:4px;
+  background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid var(--line);
+  max-width:560px;margin:0 auto;
+}
+.appbarTitle{flex:1;min-width:0;padding:0 4px 0 8px}
+.appbarTitle h1{font-size:20px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbarTitle p{font-size:12px;color:var(--ink3);margin-top:1px}
+.appbarTitle p:empty{display:none}
+.appbarActions{display:flex;align-items:center;gap:2px}
+
+.iconBtn{width:44px;height:44px;border-radius:12px;display:inline-flex;
+         align-items:center;justify-content:center;color:var(--ink);flex:none}
+.iconBtn:active{background:var(--line)}
+.iconBtn.sm{width:44px;height:44px}
+.iconBtn.sm svg{width:20px;height:20px}
+
+.body{padding:calc(var(--ab) + env(safe-area-inset-top) + 12px) 0
+             calc(var(--tb) + env(safe-area-inset-bottom) + 24px)}
+.screen{display:block}
+
+.tabbar{
+  position:fixed;bottom:0;left:0;right:0;z-index:40;
+  height:calc(var(--tb) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  background:rgba(255,255,255,.94);backdrop-filter:saturate(180%) blur(12px);
+  border-top:1px solid var(--line);
+  max-width:560px;margin:0 auto;
+}
+.tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+     gap:3px;color:var(--ink4);height:var(--tb)}
+.tab svg{width:23px;height:23px;stroke-width:1.8}
+.tab span{font-size:12px;font-weight:600;letter-spacing:-.02em}
+.tab.active{color:var(--ink)}
+.tab.active svg{stroke-width:2.2}
+.tab:active{opacity:.6}
+.tabBadge{position:absolute;top:6px;left:50%;margin-left:6px;min-width:8px;height:8px;
+          border-radius:99px;background:var(--danger);
+          font-size:12px;font-weight:800;color:#fff;font-style:normal;
+          display:flex;align-items:center;justify-content:center;padding:0 3px}
+.tabBadge:not(:empty){height:15px;min-width:15px;margin-left:4px;top:3px}
+
+/* ─────────── 블록 / 리스트 ─────────── */
+.block{background:var(--surface);margin-bottom:10px;padding:16px var(--pad) 6px}
+.block:last-of-type{margin-bottom:0}
+.blockHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+           margin-bottom:12px}
+.blockHead h2{font-size:15px}
+.hint{font-size:12px;color:var(--ink3);text-align:right;line-height:1.4}
+.lead{padding:14px var(--pad);font-size:13px;color:var(--ink2);line-height:1.6;
+      background:var(--surface);margin-bottom:10px}
+.footNote{padding:14px var(--pad) 4px;font-size:12px;color:var(--ink3);line-height:1.6}
+
+.list{background:var(--surface)}
+.block .list{margin:0 calc(var(--pad) * -1)}
+
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+     padding:14px var(--pad);min-height:56px;border-bottom:1px solid var(--line)}
+.block .row{padding-left:0;padding-right:0}
+.row:last-child{border-bottom:0}
+.rowBtn:active{background:#F7F8FA}
+.rowMain{flex:1;min-width:0}
+.rowT{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.rowS{font-size:12px;color:var(--ink3);margin-top:2px}
+.chev{width:7px;height:7px;border-right:2px solid var(--ink4);border-bottom:2px solid var(--ink4);
+      transform:rotate(-45deg);flex:none;margin-right:2px}
+.syncdot{width:8px;height:8px;border-radius:99px;background:var(--ink4);flex:none}
+.syncdot.on{background:var(--ok)} .syncdot.err{background:var(--danger)}
+.syncdot.busy{background:#F5A524}
+
+/* ─────────── 배너 ─────────── */
+.banner{display:flex;align-items:center;gap:8px;margin:0 0 10px;padding:14px var(--pad);
+        background:#FFF8E7;border-top:1px solid #FBE7B2;border-bottom:1px solid #FBE7B2;
+        font-size:13px;font-weight:600;color:#7A5200}
+.banner button{margin-left:auto;font-size:13px;font-weight:700;color:#7A5200;
+               text-decoration:underline;text-underline-offset:2px}
+
+/* ─────────── 다음 할 일 ─────────── */
+.na{display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:var(--r-lg);
+    background:#F7F8FA;border:1px solid var(--line2)}
+.na.urgent{background:#FFF5F5;border-color:#FBD3D3}
+.naD{font-size:24px;font-weight:800;line-height:1;min-width:52px;text-align:center;
+     letter-spacing:-.04em;padding-top:2px}
+.na.urgent .naD{color:var(--danger)}
+.naBody{flex:1;min-width:0}
+.naTop{display:flex;gap:5px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.naTitle{font-size:15px;font-weight:700;line-height:1.35;word-break:keep-all}
+.naWhen{font-size:12px;color:var(--ink3);margin-top:4px;line-height:1.5}
+.naRest{font-size:12px;color:var(--ink3);margin-top:10px;padding-top:10px;
+        border-top:1px solid var(--line);line-height:1.6}
+.naRest b{color:var(--ink2)}
+.empty{padding:28px 0;text-align:center;font-size:13px;color:var(--ink3);line-height:1.6}
+
+/* ─────────── 퍼널 ─────────── */
+.funnel{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fchip{border:1px solid var(--line2);border-radius:var(--r);padding:12px 6px;min-height:44px;
+       display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--surface)}
+.fchip b{font-size:20px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.fchip small{font-size:12px;color:var(--ink3);font-weight:600;white-space:nowrap}
+.fchip:active{background:#F7F8FA}
+.fchip.zero{opacity:.4}
+.fchip.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+
+/* ─────────── 배지 ─────────── */
+.stage{display:inline-flex;align-items:center;padding:3px 8px;border-radius:8px;
+       font-size:12px;font-weight:700;white-space:nowrap;letter-spacing:-.01em}
+.st-open{background:var(--c-open-bg);color:var(--c-open-fg)}
+.st-info{background:var(--c-info-bg);color:var(--c-info-fg)}
+.st-apply{background:var(--c-apply-bg);color:var(--c-apply-fg)}
+.st-result{background:var(--c-result-bg);color:var(--c-result-fg)}
+.st-test{background:var(--c-test-bg);color:var(--c-test-fg)}
+.st-interview{background:var(--c-inter-bg);color:var(--c-inter-fg)}
+.st-final{background:var(--c-final-bg);color:var(--c-final-fg)}
+.st-cert{background:var(--c-cert-bg);color:var(--c-cert-fg)}
+
+.tier{display:inline-flex;align-items:center;padding:2px 7px;border-radius:99px;
+      font-size:12px;font-weight:800;white-space:nowrap;letter-spacing:0}
+.tier-splus{background:var(--ink);color:#fff}
+.tier-s{background:#6B7684;color:#fff}
+.tier-a{background:#EDEFF3;color:#4E5968}
+.tier-w{background:transparent;color:var(--ink4);box-shadow:inset 0 0 0 1px var(--line2)}
+
+.stBadge{display:inline-flex;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:700}
+.stBadge.s-지원예정{background:#F1F3F5;color:#5A6472}
+.stBadge.s-지원완료{background:var(--c-apply-bg);color:var(--c-apply-fg)}
+.stBadge.s-서류합격{background:var(--c-result-bg);color:var(--c-result-fg)}
+.stBadge.s-검사면접{background:var(--c-test-bg);color:var(--c-test-fg)}
+.stBadge.s-최종합격{background:var(--c-final-bg);color:var(--c-final-fg)}
+.stBadge.s-불합격{background:#F1F3F5;color:var(--ink3)}
+.stBadge.s-보류{background:transparent;color:var(--ink3);box-shadow:inset 0 0 0 1px var(--line2)}
+
+.dday{font-size:12px;font-weight:800;color:var(--ink2);letter-spacing:-.02em}
+.dday.soon{color:var(--danger)}
+
+/* ─────────── 다가오는 일정 행 ─────────── */
+.up{display:flex;align-items:center;gap:12px;padding:13px var(--pad);
+    border-bottom:1px solid var(--line);width:100%;text-align:left}
+.block .up{padding-left:0;padding-right:0}
+.up:last-child{border-bottom:0}
+.up:active{background:#F7F8FA}
+.upMain{flex:1;min-width:0}
+.upCo{font-size:13px;font-weight:700;letter-spacing:-.02em}
+.upRo{font-size:12px;color:var(--ink3);margin-top:1px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upWhen{font-size:12px;color:var(--ink2);margin-top:3px;font-weight:600}
+.upRight{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none}
+.up.imp-splus{box-shadow:inset 3px 0 0 var(--ink)}
+.up.imp-s{box-shadow:inset 3px 0 0 var(--ink4)}
+.block .up.imp-splus,.block .up.imp-s{padding-left:10px;margin-left:-10px}
+.up.dropped{filter:grayscale(1);opacity:.4}
+
+/* ─────────── 캘린더 ─────────── */
+.calBar{display:flex;align-items:center;justify-content:center;gap:6px;
+        padding:6px var(--pad) 12px;background:var(--surface)}
+.calBar h2{font-size:17px;min-width:132px;text-align:center}
+.calWrap{background:var(--surface);padding:0 12px 12px}
+.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.dow{text-align:center;padding:6px 0 10px;font-size:12px;font-weight:700;color:var(--ink3)}
+.dow:nth-child(6){color:#3A7BD5} .dow:nth-child(7){color:#D5555A}
+.day{min-height:74px;padding:3px 2px 4px;border-top:1px solid var(--line);
+     display:flex;flex-direction:column;gap:2px;min-width:0}
+.day.empty{background:transparent}
+.date{font-size:12px;font-weight:700;color:var(--ink2);text-align:center;
+      width:22px;height:22px;line-height:22px;margin:0 auto 1px;border-radius:99px}
+.day.today .date{background:var(--ink);color:#fff}
+.day.gone .date{color:var(--ink4)}
+.pill{display:flex;align-items:center;gap:3px;border-radius:8px;padding:2px 4px;
+      font-size:12px;line-height:1.25;overflow:hidden;text-align:left;width:100%}
+.pill .ptier{font-size:12px;font-weight:800;border-radius:8px;padding:0 2px;flex:none}
+.pill .pco{font-weight:700;flex:1;min-width:0;overflow:hidden;
+           text-overflow:ellipsis;white-space:nowrap}
+.pill .pst,.pill .ptime,.pill .prole{display:none}
+.pill.past{opacity:.42}
+.pill.dropped{filter:grayscale(1);opacity:.3}
+.pill.imp-splus{box-shadow:inset 2.5px 0 0 var(--ink);padding-left:6px}
+.pill.imp-s{box-shadow:inset 2.5px 0 0 var(--ink4);padding-left:6px}
+.more{font-size:12px;color:var(--ink3);font-weight:700;text-align:center;padding-top:1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;padding:14px var(--pad);
+        background:var(--surface);margin-top:10px;font-size:12px;color:var(--ink2)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.lg{width:9px;height:9px;border-radius:8px;display:inline-block}
+.lg.st-open{background:var(--c-open-bg)} .lg.st-info{background:var(--c-info-bg)}
+.lg.st-apply{background:var(--c-apply-bg)} .lg.st-result{background:var(--c-result-bg)}
+.lg.st-test{background:var(--c-test-bg)} .lg.st-interview{background:var(--c-inter-bg)}
+.lg.st-final{background:var(--c-final-bg)} .lg.st-cert{background:var(--c-cert-bg)}
+
+/* ─────────── 검색 / 칩 ─────────── */
+.stickyTools{position:sticky;top:calc(var(--ab) + env(safe-area-inset-top));z-index:20;
+             background:var(--surface);padding:12px var(--pad);
+             border-bottom:1px solid var(--line);margin-bottom:10px}
+.searchWrap{position:relative;display:flex;align-items:center}
+.searchIcon{position:absolute;left:12px;width:18px;height:18px;color:var(--ink4)}
+.searchWrap input{width:100%;height:42px;border:0;background:#F2F4F6;border-radius:12px;
+                  padding:0 14px 0 38px;font-size:13px}
+.searchWrap input::placeholder{color:var(--ink4)}
+.chipRow{display:flex;gap:6px;overflow-x:auto;margin-top:9px;padding-bottom:2px;
+         -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.chipRow::-webkit-scrollbar{display:none}
+.chip2{flex:none;height:34px;padding:0 13px;border-radius:99px;background:#F2F4F6;
+       font-size:13px;font-weight:600;color:var(--ink2);display:inline-flex;
+       align-items:center;gap:5px;white-space:nowrap}
+.chip2.on{background:var(--ink);color:#fff}
+.chip2 i{font-style:normal;font-weight:800;opacity:.8}
+.selChip{flex:none;height:34px;border:0;border-radius:99px;background:#F2F4F6;
+         padding:0 30px 0 13px;font-size:13px;font-weight:600;color:var(--ink2);
+         appearance:none;
+         background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B95A1' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+         background-repeat:no-repeat;background-position:right 9px center;background-size:15px}
+
+/* ─────────── 지원 리스트 ─────────── */
+.appRow{display:block;width:100%;text-align:left;padding:16px var(--pad);
+        border-bottom:1px solid var(--line);background:var(--surface)}
+.appRow:last-child{border-bottom:0}
+.appRow.imp-splus{box-shadow:inset 3px 0 0 var(--ink)}
+.appRow.imp-s{box-shadow:inset 3px 0 0 var(--ink4)}
+.appRow.dropped{opacity:.5;filter:grayscale(1)}
+.appRow.won{box-shadow:inset 3px 0 0 var(--ok)}
+.arTop{display:flex;align-items:flex-start;gap:8px}
+.arTop > div{flex:1;min-width:0}
+.arCo{font-size:15px;font-weight:700;letter-spacing:-.02em;display:flex;
+      align-items:center;gap:6px;flex-wrap:wrap}
+.arRo{font-size:13px;color:var(--ink3);margin-top:2px;line-height:1.45}
+.arMeta{display:flex;align-items:center;gap:8px;margin-top:10px}
+.bar{flex:1;height:5px;background:#EDEFF3;border-radius:99px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--ink);border-radius:99px;transition:width .25s}
+.appRow.dropped .bar span{background:var(--ink4)}
+.pct{font-size:12px;font-weight:700;color:var(--ink3);min-width:30px;text-align:right}
+
+/* 전형 타임라인 */
+.tl{display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin-top:11px}
+.tlItem{display:inline-flex;align-items:center;gap:4px;border-radius:8px;padding:4px 7px;
+        font-size:12px;font-weight:700;white-space:nowrap;letter-spacing:-.01em}
+.tlItem.done{opacity:.45}
+.tlItem.todo{box-shadow:inset 0 0 0 1.5px rgba(25,31,40,.16)}
+.tlItem.r-pass{opacity:1;box-shadow:inset 0 0 0 1.5px var(--ok)}
+.tlItem.r-fail{opacity:.5;box-shadow:inset 0 0 0 1.5px var(--danger)}
+.tlItem.r-need{box-shadow:inset 0 0 0 1.5px #F5A524;opacity:.95}
+.rMark{font-style:normal;font-weight:900}
+.tlSep{color:var(--ink4);font-size:12px}
+
+/* 결과 입력 요청 */
+.askRes{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;
+        background:#FFF8E7;border-radius:var(--r);padding:11px 12px;
+        font-size:13px;font-weight:600;color:#7A5200}
+.askBtns{display:flex;gap:6px;margin-left:auto}
+.resBtn{height:44px;padding:0 12px;border-radius:8px;background:#fff;
+        box-shadow:inset 0 0 0 1px var(--line2);font-size:12px;font-weight:700;color:var(--ink2)}
+.resBtn.r-pass{box-shadow:inset 0 0 0 1.5px var(--ok);color:#0B7A42}
+.resBtn.r-fail{box-shadow:inset 0 0 0 1.5px var(--danger);color:#B02525}
+.resBtn:active{transform:scale(.96)}
+
+.nextLine{font-size:13px;font-weight:600;color:var(--ink2);margin-top:10px;
+          display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.nextLine.muted{color:var(--ink3);font-weight:500}
+.stale{font-size:12px;font-weight:700;color:#9A4A12;background:var(--c-test-bg);
+       border-radius:8px;padding:6px 9px;margin-top:9px;display:inline-block}
+.arNote{font-size:12px;color:var(--ink3);margin-top:9px;line-height:1.6;
+        display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.arBtns{display:flex;gap:6px;margin-top:12px}
+.arBtns .btn{flex:1}
+
+/* ─────────── 새 공고 카드 ─────────── */
+.inCard{padding:18px var(--pad);border-bottom:8px solid var(--bg);background:var(--surface)}
+.inTop{display:flex;align-items:flex-start;gap:8px}
+.inTop > div{flex:1;min-width:0}
+.inCo{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.inRole{font-size:13px;color:var(--ink3);margin-top:2px}
+.inNote{font-size:13px;font-weight:600;color:#1758B8;background:#F0F6FF;
+        border-radius:12px;padding:10px 12px;margin-top:12px;line-height:1.55}
+.inSec{margin-top:13px}
+.inSec b{display:block;font-size:12px;color:var(--ink3);font-weight:700;margin-bottom:4px}
+.inSec p{font-size:13px;line-height:1.6;color:var(--ink2);word-break:keep-all}
+.inSch{display:flex;gap:6px;flex-wrap:wrap}
+.schChip{border-radius:8px;padding:6px 10px;min-height:44px;font-size:12px;font-weight:700;display:inline-flex;align-items:center}
+.schChip.off{background:#F2F4F6!important;color:var(--ink4)!important;text-decoration:line-through}
+.schHint{font-size:12px;color:var(--ink3);margin-top:6px}
+.inBtns{display:flex;gap:8px;margin-top:16px}
+.inBtns .btn{flex:1}
+.override{font-size:12px;font-weight:600;color:#9A4A12;background:var(--c-test-bg);
+          border-radius:8px;padding:8px 10px;margin-top:11px;line-height:1.5}
+
+/* ─────────── 레이더 / DB ─────────── */
+.jobRow{display:block;width:100%;text-align:left;padding:15px var(--pad);
+        border-bottom:1px solid var(--line);background:var(--surface)}
+.jobRow.imp-splus{box-shadow:inset 3px 0 0 var(--ink)}
+.jobRow.imp-s{box-shadow:inset 3px 0 0 var(--ink4)}
+.jobRow.dropped,.jobRow.excluded{opacity:.5;filter:grayscale(1)}
+.jrTop{display:flex;align-items:flex-start;gap:8px}
+.jrTop > div{flex:1;min-width:0}
+.jrCo{font-size:15px;font-weight:700}
+.jrRo{font-size:12px;color:var(--ink3);margin-top:2px}
+.jrMid{display:flex;align-items:center;gap:7px;margin-top:9px;flex-wrap:wrap;
+       font-size:12px;color:var(--ink2)}
+
+.statRow{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+         border-bottom:1px solid var(--line);margin-bottom:10px}
+.stat{background:var(--surface);padding:14px 6px;text-align:center}
+.stat b{display:block;font-size:20px;font-weight:800;letter-spacing:-.03em}
+.stat small{font-size:12px;color:var(--ink3)}
+
+.dbRow{padding:15px var(--pad);border-bottom:1px solid var(--line);background:var(--surface)}
+.dbRow.excluded{opacity:.5}
+.dbRow.excluded .dbCo{text-decoration:line-through}
+.dbTop{display:flex;align-items:flex-start;gap:8px}
+.dbTop > div{flex:1;min-width:0}
+.dbRank{font-size:12px;color:var(--ink4);font-weight:600}
+.dbCo{font-size:15px;font-weight:700;margin-top:1px}
+.dbMeta{font-size:12px;color:var(--ink3);margin-top:2px}
+.dbRole{font-size:13px;color:var(--ink2);margin-top:8px;line-height:1.55}
+.dbChips{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+.chip{font-size:12px;font-weight:700;padding:4px 8px;border-radius:99px;
+      background:#F2F4F6;color:var(--ink2)}
+.chip.ben{background:#FFE1E1;color:#B02525}
+.chip.activeMatch{background:var(--c-result-bg);color:var(--c-result-fg)}
+.axesToggle{font-size:12px;font-weight:700;color:var(--ink3);margin-top:11px;
+            padding-top:11px;border-top:1px solid var(--line);width:100%;text-align:left}
+.axes{display:none;margin-top:10px}
+.axes.open{display:block}
+.axRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0}
+.axRow span{font-size:12px;color:var(--ink2);font-weight:600}
+.axDots{display:flex;gap:4px}
+.axDot{width:44px;height:44px;border-radius:8px;background:#F2F4F6;flex:none}
+.axDot.on{background:var(--ink)}
+.axTotal{font-size:12px;font-weight:700;margin-top:9px;color:var(--ink2)}
+.axTotal em{font-style:normal;color:var(--ink3);font-weight:500}
+.srcLink{display:block;padding:16px var(--pad);background:var(--surface);
+         font-size:13px;font-weight:600;color:var(--ink2);border-top:1px solid var(--line)}
+
+/* ─────────── 버튼 ─────────── */
+.btn{height:46px;padding:0 16px;border-radius:12px;font-size:13px;font-weight:700;
+     display:inline-flex;align-items:center;justify-content:center;gap:5px;
+     letter-spacing:-.02em;white-space:nowrap}
+.btn:active{transform:scale(.985)}
+.btnPrimary{background:var(--ink);color:#fff}
+.btnGhost{background:#F2F4F6;color:var(--ink)}
+.btnGhost.danger{color:var(--danger)}
+.btnText{background:none;color:var(--ink3);height:auto;padding:0 4px;
+         text-decoration:underline;text-underline-offset:2px;font-size:13px}
+.btn.grow{flex:1}
+.btn.full{width:100%;margin:8px 0 12px}
+.btn.sm{height:38px;font-size:13px;padding:0 12px;border-radius:12px}
+
+/* ─────────── 바텀시트 ─────────── */
+.scrim{position:fixed;inset:0;z-index:60;background:rgba(25,31,40,.42);
+       display:flex;align-items:flex-end;justify-content:center;
+       opacity:0;pointer-events:none;transition:opacity .22s ease}
+.scrim.open{opacity:1;pointer-events:auto}
+.sheet{width:100%;max-width:560px;max-height:92dvh;background:var(--surface);
+       border-radius:16px 20px 0 0;display:flex;flex-direction:column;
+       transform:translateY(16px);transition:transform .26s cubic-bezier(.2,.9,.25,1);
+       padding-bottom:env(safe-area-inset-bottom)}
+.scrim.open .sheet{transform:translateY(0)}
+.sheetGrip{width:38px;height:4px;border-radius:99px;background:var(--line2);
+           margin:8px auto 0;flex:none}
+.sheetHead{display:flex;align-items:center;gap:8px;padding:12px var(--pad) 8px;flex:none}
+.sheetHead h3{flex:1;font-size:17px}
+.sheetBody{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px var(--pad) 16px}
+.sheetFoot{display:flex;gap:8px;padding:12px var(--pad) 16px;flex:none;
+           border-top:1px solid var(--line);background:var(--surface)}
+
+.fieldNote{font-size:12px;color:var(--ink3);line-height:1.6;margin-bottom:14px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.full{grid-column:1/-1}
+.field > span{font-size:12px;font-weight:700;color:var(--ink3)}
+.field input,.field select,.field textarea{
+  width:100%;min-height:46px;border:0;background:#F2F4F6;border-radius:12px;
+  padding:12px 14px;font-size:15px}
+.field select{appearance:none;padding-right:34px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B95A1' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;background-size:16px}
+.field textarea{resize:vertical;line-height:1.6}
+.field input:focus,.field select:focus,.field textarea:focus,
+.searchWrap input:focus{outline:2px solid var(--ink);outline-offset:-2px;background:#fff}
+
+.steps{list-style:none;margin:0;padding:0;counter-reset:st}
+.steps li{position:relative;padding-left:34px;margin-bottom:22px}
+.steps li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:0;
+  width:24px;height:24px;border-radius:99px;background:var(--ink);color:#fff;
+  font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.stepT{font-size:13px;font-weight:600;line-height:1.5}
+.stepA{display:flex;align-items:center;gap:8px;margin-top:10px}
+.steps textarea,#promptBox,#impBox{width:100%;margin-top:10px;border:0;background:#F2F4F6;
+  border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.6;resize:vertical;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+#impResult{margin-top:10px}
+.impOk{background:#E9F8EF;color:#0B7A42;border-radius:12px;padding:10px 12px;
+       font-size:13px;font-weight:700;line-height:1.5}
+.impErr{background:#FFF0F0;color:#B02525;border-radius:12px;padding:10px 12px;
+        font-size:13px;font-weight:700;line-height:1.5}
+.impList{margin-top:8px;font-size:12px;color:var(--ink3);line-height:1.6}
+
+.guide{margin-top:16px;font-size:13px;color:var(--ink2);line-height:1.7}
+.guide summary{font-weight:700;cursor:pointer;padding:10px 0;color:var(--ink)}
+.guide ol{padding-left:18px;margin:6px 0}
+.guide li{margin:5px 0}
+.guide pre{background:var(--ink);color:#E6EAEF;border-radius:12px;padding:14px;
+           font-size:12px;line-height:1.65;overflow-x:auto;margin:10px 0;
+           font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* ─────────── 토스트 ─────────── */
+#toast{position:fixed;left:50%;transform:translateX(-50%) translateY(8px);
+       bottom:calc(var(--tb) + env(safe-area-inset-bottom) + 16px);z-index:80;
+       background:rgba(25,31,40,.94);color:#fff;padding:13px 18px;border-radius:12px;
+       font-size:13px;font-weight:600;max-width:calc(100% - 40px);text-align:center;
+       opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+       box-shadow:0 8px 28px rgba(0,0,0,.2)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ─────────── 큰 화면 ─────────── */
+@media(min-width:420px){
+  .day{min-height:82px}
+  .pill{font-size:12px}
+  .pill .pst{display:inline;font-weight:700;opacity:.7;flex:none}
+}
+@media(min-width:561px){
+  .funnel{grid-template-columns:repeat(6,1fr)}
+  .fields{gap:14px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+
+/* ============================================================
+   레이아웃 보정 — button 안의 span 은 기본 inline 이므로 명시한다
+   ============================================================ */
+.na{display:flex;width:100%;text-align:left}
+.naD{display:block;flex:none}
+.naBody{display:block;flex:1;min-width:0}
+.naTop{display:flex}
+.naTitle,.naWhen{display:block}
+
+.up{display:flex}
+.upMain{display:block;flex:1;min-width:0}
+.upCo,.upRo,.upWhen{display:block}
+.upRight{display:flex}
+.upCo{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 블록 안 리스트는 블록 패딩을 벗어났다가 스스로 패딩을 갖는다 */
+.block > .list{margin-left:calc(var(--pad) * -1);margin-right:calc(var(--pad) * -1)}
+.block > .list .up,
+.block > .list .row{padding-left:var(--pad);padding-right:var(--pad)}
+.block > .row{padding-left:0;padding-right:0}
+.block > .list .up.imp-splus,
+.block > .list .up.imp-s{padding-left:var(--pad);margin-left:0}
+
+/* 홈 상단 배너가 잘리지 않도록 */
+.banner{margin-top:0}
+.banner span{flex:1;min-width:0}
+
+/* 텍스트 정렬 — button 기본 center 상속 차단 */
+.na,.na *,.up,.up *,.appRow,.appRow *,.jobRow,.jobRow *,.row,.row *{text-align:left}
+.naD{text-align:center}
+.fchip,.fchip *{text-align:center}
+.upRight,.upRight *{text-align:right}
+
+/* 다가오는 일정 2줄 압축 */
+.up{padding-top:12px;padding-bottom:12px}
+.upRo b{color:var(--ink2);font-weight:700}
+.upRight{gap:6px}
+/* 캘린더 칩은 회사명에 폭을 다 준다. 중요도는 왼쪽 액센트 바가 이미 말해준다 */
+.pill{padding:3px 5px}
+.pill.imp-splus,.pill.imp-s{padding-left:7px}
+.guide textarea{width:100%;margin-top:10px;border:0;background:#F2F4F6;border-radius:12px;
+                padding:12px 14px;font-size:12px;line-height:1.6;resize:vertical;
+                font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.guide p{margin:6px 0}
+
+/* 검색 지우기 · 위험 액션 */
+.clearBtn{position:absolute;right:2px;width:44px;height:44px;border-radius:99px;
+          display:flex;align-items:center;justify-content:center;color:var(--ink4)}
+.clearBtn svg{width:18px;height:18px}
+.clearBtn:active{background:var(--line)}
+.searchWrap input{padding-right:42px}
+.btn.danger,.btnGhost.danger{color:var(--danger)}
+.row.danger .rowT{color:var(--danger)}
+.arBtns{flex-wrap:wrap}
+.arBtns .btn{flex:1;min-width:88px}
+.empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:32px 20px}
+.empty b{font-size:15px;color:var(--ink2);font-weight:700}
+.empty span{font-size:13px;color:var(--ink3)}
+.emptyBtns{display:flex!important;gap:8px;margin-top:10px}
+
+/* ============================================================
+   온보딩 — 앱 위 전체화면
+   ============================================================ */
+.onboard{position:fixed;inset:0;z-index:90;background:var(--surface);
+         display:flex;flex-direction:column;max-width:560px;margin:0 auto;
+         box-shadow:0 0 0 1px rgba(25,31,40,.06)}
+.obBar{display:flex;align-items:center;gap:10px;flex:none;
+       padding:calc(env(safe-area-inset-top) + 12px) 16px 12px}
+.obProg{flex:1;height:4px;background:var(--line);border-radius:99px;overflow:hidden}
+.obProg span{display:block;height:100%;background:var(--ink);border-radius:99px;
+             transition:width .3s cubic-bezier(.2,.9,.25,1)}
+.obStep{font-size:12px;font-weight:700;color:var(--ink3);min-width:34px;text-align:right}
+.obBody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px var(--pad) 24px}
+.obFoot{flex:none;display:flex;gap:8px;padding:12px var(--pad)
+        calc(env(safe-area-inset-bottom) + 16px);border-top:1px solid var(--line)}
+
+.obTitle{font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1.3;margin-bottom:8px}
+.obLead{font-size:13px;color:var(--ink2);line-height:1.65;margin-bottom:22px}
+.obNote{font-size:12px;color:var(--ink3);line-height:1.6;margin-top:14px}
+.obSection{margin-bottom:22px}
+.obLabel{font-size:12px;font-weight:700;color:var(--ink3);margin-bottom:8px;display:block}
+
+.obInput{width:100%;min-height:48px;border:0;background:#F2F4F6;border-radius:12px;
+         padding:13px 14px;font-size:15px;margin-bottom:10px}
+.obInput:focus{outline:2px solid var(--ink);outline-offset:-2px;background:#fff}
+textarea.obInput{line-height:1.6;resize:vertical}
+.obRow{display:flex;gap:10px}
+.obRow .obInput{flex:1}
+
+/* 선택 칩 */
+.pickWrap{display:flex;flex-wrap:wrap;gap:8px}
+.pick{padding:10px 14px;border-radius:99px;background:#F2F4F6;font-size:13px;
+      font-weight:600;color:var(--ink2);min-height:44px;display:inline-flex;align-items:center}
+.pick.on{background:var(--ink);color:#fff}
+
+/* 순위 매기기 */
+.rankList{display:flex;flex-direction:column;gap:8px}
+.rankItem{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;
+          background:#F7F8FA;box-shadow:inset 0 0 0 1px var(--line);width:100%;text-align:left}
+.rankItem.on{background:var(--ink);box-shadow:none}
+.rankItem.on .rkT,.rankItem.on .rkD{color:#fff}
+.rankItem.on .rkD{opacity:.7}
+.rkNo{width:26px;height:26px;border-radius:99px;background:#fff;color:var(--ink3);
+      font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;
+      box-shadow:inset 0 0 0 1px var(--line2)}
+.rankItem.on .rkNo{background:#fff;color:var(--ink);box-shadow:none}
+.rkMain{flex:1;min-width:0}
+.rkT{font-size:13px;font-weight:700;color:var(--ink)}
+.rkD{font-size:12px;color:var(--ink3);margin-top:2px}
+
+/* 점수 도트 */
+.critRow{display:flex;align-items:center;justify-content:space-between;gap:12px;
+         padding:13px 0;border-bottom:1px solid var(--line)}
+.critRow:last-child{border-bottom:0}
+.critMain{flex:1;min-width:0}
+.critT{font-size:13px;font-weight:600}
+.critD{font-size:12px;color:var(--ink3);margin-top:2px}
+.dots{display:flex;gap:5px;flex:none}
+.dot{width:44px;height:44px;border-radius:8px;background:#F2F4F6;flex:none;
+     font-size:12px;font-weight:700;color:var(--ink4)}
+.onboard .critRow{align-items:flex-start;flex-direction:column}
+.onboard .dots{width:100%;justify-content:space-between;gap:5px;flex-wrap:nowrap;margin-top:0}
+.dot.on{background:var(--ink);color:#fff}
+
+/* 태그 입력 */
+.tagList{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:99px;
+     background:#FFE1E1;color:#B02525;font-size:13px;font-weight:600}
+.tag button{color:#B02525;font-weight:800;font-size:13px;line-height:1}
+
+/* 완료 */
+.doneBox{background:#F7F8FA;border-radius:12px;padding:16px;margin-top:8px}
+.doneBox h4{margin:0 0 8px;font-size:13px;font-weight:700}
+.doneBox ol{margin:0;padding-left:18px;font-size:13px;line-height:1.8;color:var(--ink2)}
+.keyBox{background:var(--ink);color:#fff;border-radius:12px;padding:16px;margin:14px 0}
+.keyBox .kLabel{font-size:12px;opacity:.7;font-weight:700}
+.keyBox .kVal{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+              word-break:break-all;margin-top:6px;line-height:1.5}
+.keyBox .kWarn{font-size:12px;opacity:.8;margin-top:10px;line-height:1.55}
+.obReturn{background:#F0F6FF;border-radius:12px;padding:16px;margin-bottom:20px}
+.obReturn b{display:block;font-size:13px;color:#1758B8;margin-bottom:6px}
+.obReturn span{display:block;font-size:13px;color:var(--ink2);line-height:1.65}
+.obReturn .btn{margin-top:12px}
+
+
+/* 가져오기 결과 요약 */
+.impChk{margin-top:8px;padding:12px 14px;border-radius:12px;background:#F1F5F9}
+.impChk b{display:block;font-size:13px;color:var(--ink);margin-bottom:3px}
+.impChk span{display:block;font-size:13px;color:var(--ink2);line-height:1.55}
+.radarStatus{margin:10px var(--pad) 0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);display:flex;justify-content:space-between;gap:10px;align-items:center}
+.radarStatus b{font-size:13px}.radarStatus span{font-size:12px;color:var(--ink3);text-align:right}
+.radarStatus.is-error{border-color:#FCA5A5;background:#FEF2F2}
+.radarStatus.is-error{cursor:pointer}
+.radarStatus.is-partial{border-color:#F5D58A;background:#FFF9E8}
+.inboxManage{margin:8px var(--pad) 18px;color:var(--ink3);font-size:12px;text-align:right}
+.inboxManage summary{cursor:pointer;list-style:none;padding:8px 0}.inboxManage .btn{font-size:12px;color:var(--danger)}
+.impWarn{margin-top:8px;padding:12px 14px;border-radius:12px;background:#FFF4E6;
+  font-size:13px;color:#9A5B00;line-height:1.6}
+
+/* 검토함 미검증 배지 */
+.unv{display:inline-block;margin-left:6px;padding:2px 7px;border-radius:8px;
+  background:#FFF4E6;color:#9A5B00;font-size:12px;font-weight:700;vertical-align:1px}
+
+.inNote.inUnv{color:#9A5B00;background:#FFF4E6;border-radius:8px;padding:9px 11px}
+
+.block > .lead{padding-left:0;padding-right:0;padding-top:0}
+
+/* 저장 실패 상시 배너 (#46) */
+.saveErr{position:fixed;left:0;right:0;top:56px;z-index:60;padding:11px 20px;
+  background:#B3261E;color:#fff;font-size:13px;font-weight:600;line-height:1.5}
+.saveErr[hidden]{display:none!important}
+
+/* 동기화 상태 · 충돌 (v7.6) */
+.syncdot.warn{background:#F0A93B}
+.cfSide{margin:0 0 10px;padding:13px 15px;border-radius:12px;background:#F1F5F9}
+.cfSide b{display:block;font-size:13px;color:var(--ink);margin-bottom:4px}
+.cfSide b i{font-style:normal;font-size:12px;font-weight:600;color:var(--ink3);margin-left:6px}
+.cfSide span{display:block;font-size:13px;color:var(--ink2);line-height:1.6}
+.cfFoot{display:flex;flex-direction:column;gap:8px}
+
+
+/* ═══════════ 지원 관리 v7.9 — 접힌 행 + 상세 시트 ═══════════ */
+.list--apps{background:var(--surface)}
+.apItem{border-bottom:1px solid var(--line)}
+.apItem:last-child{border-bottom:0}
+.apItem.imp-splus{box-shadow:inset 3px 0 0 var(--ink)}
+.apItem.imp-s{box-shadow:inset 3px 0 0 var(--ink3)}
+.apItem.dropped{opacity:.5}
+.apItem.won{background:#F2FBF5}
+
+.apRow{display:flex;align-items:center;gap:10px;width:100%;min-height:88px;
+  padding:12px var(--pad);background:none;border:0;text-align:left}
+.apRow:active{background:#F7F8FA}
+.apMain{display:block;flex:1;min-width:0}
+.apL1{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.apCo{font-size:15px;font-weight:700;color:var(--ink);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.apL2{display:block;font-size:13px;color:var(--ink2);margin-bottom:6px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.apL3{display:flex;align-items:center;flex-wrap:wrap;gap:5px;font-size:13px;color:var(--ink2)}
+.apSep{color:var(--ink4)}
+.stDot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--ink4)}
+.stDot.s지원예정{background:#9AA3AF} .stDot.s지원완료{background:#4A7DD6}
+.stDot.s서류합격{background:#7A5AF8} .stDot.s검사면접{background:#F0913B}
+.stDot.s최종합격{background:#1E9E58} .stDot.s불합격{background:#C7CBD1}
+.stDot.s보류{background:#F0A93B}
+.apL3 .dd{font-weight:700;color:var(--ink2)}
+.apL3 .dd.soon{color:#C4761C} .apL3 .dd.now{color:var(--danger)} .apL3 .dd.over{color:var(--ink3)}
+.apRow .chev{flex:none}
+.apStale{padding:0 var(--pad) 12px;font-size:12px;color:#9A5B00}
+
+/* 결과 입력 = 주 액션. 행 바로 아래 붙는다 */
+.apItem .askRes{margin:0;padding:10px var(--pad) 14px;background:#FFF9EF;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* 상세 시트 */
+.sheetTall .sheetBody{max-height:min(62vh,560px);overflow-y:auto}
+.apSheetHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.apSheetHead h3{margin:0 0 3px;font-size:17px}
+.apSheetHead p{margin:0;font-size:13px;color:var(--ink2)}
+.xBtn{flex:none;width:34px;height:34px;border:0;border-radius:50%;background:#F1F3F5;
+  display:flex;align-items:center;justify-content:center}
+.xBtn svg{width:17px;height:17px;stroke:var(--ink2);stroke-width:2;fill:none;stroke-linecap:round}
+.apHead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.apPct{font-size:13px;font-weight:700;color:var(--ink2);margin-left:auto}
+.apBar{display:block;width:100%;margin-bottom:18px}
+.apH4{margin:18px 0 10px;font-size:13px;font-weight:700;color:var(--ink2)}
+.apNote{margin-top:10px;padding:11px 13px;border-radius:12px;background:#F5F6F8;
+  font-size:13px;color:var(--ink2);line-height:1.6}
+.apNote b{display:block;font-size:12px;color:var(--ink3);margin-bottom:3px}
+
+/* 세로 stepper */
+.stp{list-style:none;margin:0;padding:0;position:relative}
+.stp::before{content:'';position:absolute;left:5px;top:14px;bottom:14px;width:2px;background:var(--line)}
+.stpBtn{display:flex;align-items:center;gap:12px;width:100%;padding:9px 0;background:none;border:0;text-align:left}
+.stpDot{position:relative;z-index:1;flex:none;width:12px;height:12px;border-radius:50%;
+  background:#fff;border:2px solid var(--line)}
+.sPass .stpDot{background:#1E9E58;border-color:#1E9E58}
+.sFail .stpDot{background:#C7CBD1;border-color:#C7CBD1}
+.sNeed .stpDot{background:#F0A93B;border-color:#F0A93B}
+.stpBody{flex:1;min-width:0}
+.stpT{display:block;font-size:13px;font-weight:600;color:var(--ink)}
+.sFail .stpT,.sFail .stpD{color:var(--ink3);text-decoration:line-through}
+.stpD{display:block;font-size:12px;color:var(--ink2);margin-top:2px}
+.sNeed .stpD{color:#9A5B00;font-weight:600}
+.stpEdit{flex:none;font-size:12px;color:var(--ink3)}
+.apFoot{display:flex;flex-direction:column;gap:8px}
+.apFoot2{display:flex;gap:8px}
+.apFoot2 .btn{flex:1}
+
+/* ═══════════ v7.10 — GPT 리뷰 반영 ═══════════ */
+
+/* #5 필터 영역 압축: 두 줄 → 한 줄, 높이도 줄인다 */
+.stickyTools{padding:10px var(--pad) 8px}
+.searchWrap input{height:38px;border-radius:12px;font-size:13px}
+.searchIcon{width:16px;height:16px;left:11px}
+.searchWrap input{padding-left:34px}
+.chipRow{margin-top:8px;gap:5px;align-items:center}
+.chipGroup{display:contents}
+.chip2{height:32px;padding:0 11px;font-size:12px}
+.selChip{height:32px;padding:0 26px 0 11px;font-size:12px;background-size:13px;
+  background-position:right 8px center}
+/* #6 초기화는 pill 이 아니라 조용한 텍스트 버튼 */
+.resetBtn{flex:none;height:32px;padding:0 8px;border:0;background:none;
+  font-size:12px;font-weight:600;color:var(--ink3);text-decoration:underline;text-underline-offset:3px}
+.resetBtn[hidden]{display:none!important}
+
+/* #1 직무명은 절대 임의로 자르지 않는다 — 최대 2줄 */
+.apL2{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;line-height:1.4}
+.apRow{align-items:flex-start;padding-top:13px;padding-bottom:13px}
+.apRow .chev{align-self:center}
+
+/* #14 24시간 밖은 약하게 */
+.apL3 .dd.mild{color:#B8791F;font-weight:600}
+
+/* #2 결과 대기 줄: 배경은 옅게, 강조는 라벨과 버튼으로 */
+.apItem .askRes{background:#FFFBF3;padding:9px var(--pad) 12px;
+  border-top:1px solid #F6ECDA}
+.askTag{display:inline-block;margin-right:7px;padding:2px 7px;border-radius:8px;
+  background:#F6E4C4;color:#8A5A12;font-size:12px;font-weight:800;font-style:normal;
+  letter-spacing:-.01em;vertical-align:1px}
+.apItem .askRes .resBtn{font-weight:700}
+
+/* #8 #9 상세: 회색 카드 대신 flat section */
+.apSec{padding:14px 0 0;border-top:1px solid var(--line);margin-top:14px}
+.apSec b{display:block;font-size:12px;font-weight:700;color:var(--ink3);
+  letter-spacing:.01em;margin-bottom:5px}
+.apSec p{margin:0;font-size:13px;color:var(--ink);line-height:1.6}
+.apH4{display:flex;align-items:baseline;gap:8px;margin:4px 0 12px}
+.apH4 i{font-style:normal;font-size:12px;font-weight:600;color:var(--ink3)}
+.apHead{margin-bottom:16px}
+.apHead .golink{margin-left:auto}
+
+/* #10 닫기 X — 배경 원 제거, 히트 영역은 유지 */
+.xBtn{width:44px;height:44px;margin:-6px -10px -6px 0;background:none}
+.xBtn svg{width:21px;height:21px;stroke:var(--ink3)}
+.xBtn:active svg{stroke:var(--ink)}
+
+/* #3 #11 stepper: «수정» 텍스트 제거, 결과는 그 자리에서 */
+.stpEdit{display:none}
+.stpBtn{padding:11px 0}
+.stpAsk{display:flex;gap:6px;margin:0 0 10px 24px}
+.stpAsk .resBtn{flex:1;max-width:120px}
+.sNeed .stpBtn{padding-bottom:6px}
+
+/* D-day 기본은 약하게. 가까울수록만 세진다 (#14) */
+.apL3 .dd{font-weight:600;color:var(--ink2)}
+.apL3 .dd.mild{color:#B8791F;font-weight:700}
+.apL3 .dd.soon{color:#C4761C;font-weight:800}
+.apL3 .dd.now{color:var(--danger);font-weight:800}
+/* 상세 채용 링크는 작게 (#9) */
+.apHead .golink{height:28px;padding:0 10px;font-size:12px}
+
+/* ═══════════ v7.11 — 지원 종료(보관) ═══════════ */
+.stBadge.s종료{background:#EEF0F3;color:var(--ink3)}
+.apMoreBtn{flex:0 0 44px!important;min-width:44px;padding:0;font-size:17px;
+  letter-spacing:2px;color:var(--ink3)}
+.apMoreMenu{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+.apMoreMenu[hidden]{display:none!important}
+.apMoreItem{display:block;width:100%;padding:12px 0;background:none;border:0;
+  font-size:13px;font-weight:600;text-align:left}
+.apMoreItem.danger{color:var(--danger)}
+
+/* 되돌리기 스낵바 */
+.undoBar{position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--tb) + env(safe-area-inset-bottom) + 14px);z-index:80;
+  display:flex;align-items:center;gap:14px;max-width:min(340px,calc(100vw - 40px));
+  padding:12px 14px 12px 16px;border-radius:12px;background:rgba(24,28,33,.96);
+  color:#fff;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.undoBar[hidden]{display:none!important}
+.undoBar span{flex:1;min-width:0;line-height:1.45}
+.undoBar button{flex:none;padding:6px 10px;border:0;border-radius:8px;
+  background:rgba(255,255,255,.16);color:#fff;font-size:13px;font-weight:700}
+
+/* 필터 칩이 오른쪽으로 더 있다는 걸 보이게 — 별도 화살표는 두지 않는다 */
+#s-apps .chipRow{padding-right:28px}
+
+/* ═══════════ v7.12 — 홈 / 캘린더 구조 개편 ═══════════ */
+
+/* 지금 해야 할 것 — 제목이 주인공. «오늘» 이 제목보다 커지지 않는다 */
+.hero{display:flex;align-items:flex-start;gap:12px;width:100%;padding:16px;
+  border:1px solid var(--line2);border-radius:var(--r-lg);background:var(--surface);text-align:left}
+.hero:active{background:#F7F8FA}
+.hero.imp-splus{box-shadow:inset 3px 0 0 var(--ink)}
+.hero.imp-s{box-shadow:inset 3px 0 0 var(--ink3)}
+.heroBody{flex:1;min-width:0}
+.heroTitle{display:block;font-size:20px;font-weight:800;color:var(--ink);
+  letter-spacing:-.02em;line-height:1.3;margin-bottom:5px}
+.heroWhen{display:block;font-size:13px;font-weight:600;color:var(--ink2)}
+.heroWhen.now{color:var(--danger);font-weight:800}
+.heroSub{display:block;margin-top:5px;font-size:13px;color:var(--ink3);line-height:1.45}
+.hero .tier{flex:none;margin-top:2px}
+
+/* 지원 현황 — 0인 상태는 아예 안 보인다 */
+.funnel{display:flex;flex-wrap:wrap;gap:7px}
+.fstat{display:inline-flex;align-items:baseline;gap:5px;padding:9px 13px;border-radius:12px;
+  background:#F2F4F6;border:0}
+.fstat b{font-size:15px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.fstat span{font-size:12px;font-weight:600;color:var(--ink2)}
+.fstat.on{background:var(--ink)}
+.fstat.on b,.fstat.on span{color:#fff}
+
+/* 그다음 일정 — 평평한 row */
+.up2{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;
+  padding:11px var(--pad);background:none;border:0;border-bottom:1px solid var(--line);text-align:left}
+.up2:last-child{border-bottom:0}
+.up2:active{background:#F7F8FA}
+.up2Main{flex:1;min-width:0}
+.up2Co{display:block;font-size:15px;font-weight:700;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.up2Sub{display:block;margin-top:2px;font-size:13px;color:var(--ink2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.up2 .dd{flex:none;font-size:13px;font-weight:600;color:var(--ink2)}
+.up2 .dd.mild{color:#B8791F;font-weight:700}
+.up2 .dd.soon{color:#C4761C;font-weight:800}
+.up2 .dd.now{color:var(--danger);font-weight:800}
+
+/* 월 캘린더 — 회사명을 포기하고 밀도만 본다 */
+.day{min-height:62px;padding:4px 2px 5px}
+.dots{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:3px;margin-top:3px}
+.cdot{width:6px;height:6px;border-radius:50%;flex:none;display:block}
+.cdot.past{opacity:.38}
+.cdot.dropped{background:#D4D8DD!important;opacity:.5}
+.cdotMore{font-style:normal;font-size:12px;font-weight:800;color:var(--ink3);line-height:1}
+.cdot.st-open{background:#9AA3AF}    .cdot.st-info{background:#E0A02A}
+.cdot.st-apply{background:#4A7DD6}   .cdot.st-result{background:#7A5AF8}
+.cdot.st-test{background:#F0913B}    .cdot.st-interview{background:#E0576B}
+.cdot.st-final{background:#1E9E58}   .cdot.st-cert{background:#25A9A0}
+
+/* 날짜 시트 = 진짜 정보창 */
+.dayRow{display:flex;align-items:flex-start;gap:11px;width:100%;padding:13px 0;
+  background:none;border:0;border-bottom:1px solid var(--line);text-align:left}
+.dayRow:last-child{border-bottom:0}
+.dayRow.dropped{opacity:.45}
+.dayRow .stage{flex:none;margin-top:1px}
+.dayMain{flex:1;min-width:0}
+.dayCo{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:var(--ink)}
+.daySub{display:block;margin-top:3px;font-size:13px;color:var(--ink2);line-height:1.5}
+
+/* ═══════════ v7.13 — 캘린더 여백 / 동기화 배너 / 시맨틱 ═══════════ */
+
+/* #1 캘린더는 «달력만» 이 맞다. 다만 남는 영역이 회색 미완성 패널처럼 보이면 안 되므로
+       #s-cal 전체를 surface 로 이어 붙여 «콘텐츠 없는 여백» 으로 만든다. */
+#s-cal{background:var(--surface);
+  /* body 의 위아래 회색 여백까지 먹어서, 앱바 바로 아래부터 탭바까지 한 장의 흰 시트가 되게 한다.
+     아래쪽은 음수 margin 으로 당기고 같은 양을 padding 으로 돌려줘 내용이 탭바에 가리지 않는다. */
+  margin-top:-12px;
+  margin-bottom:calc(-1 * (var(--tb) + env(safe-area-inset-bottom) + 24px));
+  padding-bottom:calc(var(--tb) + env(safe-area-inset-bottom) + 24px);
+  min-height:calc(100vh  - var(--ab));
+  min-height:calc(100dvh - var(--ab) - env(safe-area-inset-top))}
+#s-cal .footNote{padding-bottom:18px}
+
+/* #4 달력 아이콘은 «오늘로 이동» 이라는 뜻이 안 드러난다. 글자로 말한다. */
+.txtBtn{height:34px;padding:0 12px;border-radius:8px;border:0;flex:none;
+  font-size:13px;font-weight:700;color:var(--ink);background:#F1F3F5}
+.txtBtn:active{background:#E6E9ED}
+
+/* #5 day 셀은 실제로 누르는 것이므로 button 이다 (키보드·스크린리더) */
+.day{-webkit-appearance:none;appearance:none;background:transparent;color:inherit;
+  font:inherit;border:0;border-top:1px solid var(--line);border-radius:0;
+  width:100%;text-align:center;cursor:pointer}
+.day:active{background:#F7F8FA}
+.day:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+
+/* #3 홈의 동기화 row 는 더보기와 중복이라 상주시키지 않는다.
+       미동기화·충돌·실패일 때만 얇은 배너로 알린다. */
+.syncBar{display:flex;align-items:center;gap:9px;width:100%;
+  margin:0 0 10px;padding:11px var(--pad);
+  background:var(--surface);border:0;border-bottom:1px solid var(--line);
+  text-align:left;font-size:13px;font-weight:600;color:var(--ink2)}
+.syncBar .syncBarT{flex:1;min-width:0}
+.syncBar.err{background:#FFF4F4;color:#B3261E}
+.syncBar.err .chev{border-color:#B3261E}
+.syncBar:active{background:#F7F8FA}
+.syncBar[hidden]{display:none!important}
+
+/* ── 더보기 IA: «매일 쓰는 것» 만 무겁게, 파괴적 액션은 접어둔다 ── */
+.blockLead{padding-top:10px}
+.rowLead{min-height:62px}
+.rowLead .rowT{font-size:15px;font-weight:700}
+.rowLead .rowS{font-size:13px;margin-top:3px}
+
+/* 켜기/끄기는 진입이 아니므로 chevron 대신 스위치 */
+.switch{position:relative;width:44px;height:26px;border-radius:99px;flex:none;
+  background:#D8DCE1;transition:background .16s}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;
+  border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.22);transition:transform .16s}
+#pdbToggle.on .switch,#badgeBtn.on .switch{background:var(--ok,#16A34A)}
+#pdbToggle.on .switch::after,#badgeBtn.on .switch::after{transform:translateX(18px)}
+
+.dangerZone{padding:0}
+.dangerZone > summary{list-style:none;cursor:pointer;
+  padding:16px var(--pad) 15px;font-size:13px;font-weight:700;color:var(--ink3)}
+.dangerZone > summary::-webkit-details-marker{display:none}
+.dangerZone > summary::after{content:'';display:inline-block;vertical-align:middle;
+  margin-left:7px;width:6px;height:6px;border-right:2px solid var(--ink4);
+  border-bottom:2px solid var(--ink4);transform:translateY(-2px) rotate(45deg)}
+.dangerZone[open] > summary::after{transform:translateY(1px) rotate(-135deg)}
+.dangerZone > summary:active{background:#F7F8FA}
+.dangerZone > .row{padding-left:var(--pad);padding-right:var(--pad)}
+.dangerZone > .row:last-child{border-bottom:0}
+/* details 안의 .row 는 author display:flex 가 UA 의 «닫힘=숨김» 을 이겨버린다. 명시적으로 끊는다. */
+.dangerZone:not([open]) > .row{display:none}
+.utilityZone{padding:0}
+.utilityZone > summary{list-style:none;cursor:pointer;padding:14px var(--pad);font-size:13px;font-weight:700;color:var(--ink3)}
+.utilityZone > summary::-webkit-details-marker{display:none}
+.utilityZone:not([open]) > .row{display:none}
+
+/* ═══════════ v7.14 — 캘린더: 격자 아래 «그 달 일정» 상주 ═══════════
+   격자는 밀도만 말한다. 무엇인지는 누르지 않아도 보여야 한다. */
+.calList{background:var(--surface);padding:0 0 4px}
+.calListH{padding:18px var(--pad) 10px;font-size:13px;font-weight:700;color:var(--ink3);
+  border-top:1px solid var(--line);margin-top:4px}
+.calEmpty{padding:34px var(--pad);text-align:center;font-size:13px;color:var(--ink3);
+  border-top:1px solid var(--line);margin-top:4px}
+
+.calDay{padding:0 var(--pad);border-radius:12px;transition:background .5s}
+.calDayH{display:flex;align-items:baseline;gap:6px;padding:12px 0 2px;
+  font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.calDayH span{font-size:12px;font-weight:600;color:var(--ink3)}
+.calDayH em{margin-left:2px;font-style:normal;font-size:12px;font-weight:800;
+  color:#fff;background:var(--ink);border-radius:99px;padding:2px 7px}
+.calDay.isToday .calDayH{color:var(--ink)}
+.calDay.flash{background:#FFF6DF}
+
+.calList .dayRow{padding:11px 0}
+.calList .dayRow.past{opacity:.45}
+
+.pastFold{border-bottom:1px solid var(--line)}
+.pastFold > summary{list-style:none;cursor:pointer;padding:12px var(--pad);
+  font-size:13px;font-weight:700;color:var(--ink3)}
+.pastFold > summary::-webkit-details-marker{display:none}
+.pastFold > summary::after{content:'';display:inline-block;vertical-align:middle;
+  margin-left:7px;width:6px;height:6px;border-right:2px solid var(--ink4);
+  border-bottom:2px solid var(--ink4);transform:translateY(-2px) rotate(45deg)}
+.pastFold[open] > summary::after{transform:translateY(1px) rotate(-135deg)}
+.pastFold:not([open]) > .calDay{display:none}
+
+/* 목록이 아래에 붙었으니 격자는 더 눌러 담는다 — 첫 일정이 접히지 않고 보여야 한다 */
+.calBar{padding:2px var(--pad) 8px}
+.day{min-height:54px;padding:3px 2px 4px}
+.dow{padding:4px 0 7px}
+.calListH{padding:14px var(--pad) 6px}
+.pastFold > summary{padding:9px var(--pad)}
+
+/* ══════════════════════════════════════════════════════════════════
+   v8.0 컴포넌트 — 모든 화면은 아래 부품으로만 조립한다.
+   화면별 override 금지. 새 변형이 필요하면 여기에 variant 를 추가한다.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── StageBadge — 전형 단계. 이 앱에서 색을 쓰는 유일한 곳 ── */
+.stageBadge{display:inline-flex;align-items:center;flex:none;
+  height:22px;padding:0 var(--s2);border-radius:var(--r1);
+  font:var(--t-meta);letter-spacing:-.02em;white-space:nowrap}
+.stageBadge.st-open{background:var(--c-open-bg);color:var(--c-open-fg)}
+.stageBadge.st-info{background:var(--c-info-bg);color:var(--c-info-fg)}
+.stageBadge.st-apply{background:var(--c-apply-bg);color:var(--c-apply-fg)}
+.stageBadge.st-result{background:var(--c-result-bg);color:var(--c-result-fg)}
+.stageBadge.st-test{background:var(--c-test-bg);color:var(--c-test-fg)}
+.stageBadge.st-inter{background:var(--c-inter-bg);color:var(--c-inter-fg)}
+.stageBadge.st-final{background:var(--c-final-bg);color:var(--c-final-fg)}
+.stageBadge.st-cert{background:var(--c-cert-bg);color:var(--c-cert-fg)}
+
+/* ── TierMark — 중요도. 절대 색을 쓰지 않는다 ── */
+.tierMark{display:inline-flex;align-items:center;justify-content:center;flex:none;
+  height:18px;min-width:22px;padding:0 5px;border-radius:var(--r1);
+  font:var(--t-meta);font-size:12px;letter-spacing:-.03em}
+.tierMark.tier-splus{background:var(--ink);color:#fff}
+.tierMark.tier-s{background:var(--ink-2);color:#fff}
+.tierMark.tier-a{background:#E9ECEF;color:var(--ink-2)}
+.tierMark.tier-w{background:#F2F4F6;color:var(--ink-3)}
+
+/* ── StatusChip — 지원 상태. 유일하게 알약(999)을 쓰는 부품 ── */
+.statusChip{display:inline-flex;align-items:center;height:24px;padding:0 var(--s3);
+  border-radius:var(--rf);font:var(--t-meta);
+  background:#F0F2F5;color:var(--ink-2);white-space:nowrap}
+.statusChip.is-live{background:var(--ink);color:#fff}
+.statusChip.is-done{background:#E6F6EC;color:var(--ok)}
+.statusChip.is-fail{background:#F2F4F6;color:var(--ink-3)}
+.statusChip.is-hold{background:#FFF4E0;color:#8A5B00}
+
+/* ── EventRow — 일정 하나. 세 화면이 같은 골격을 쓴다 ──
+      골격: StageBadge → 회사/직무 → trailing
+      variant 는 trailing 에 무엇이 오는지만 결정한다 */
+.evRow{display:flex;align-items:flex-start;gap:var(--s3);width:100%;
+  min-height:var(--tap-min);padding:var(--s3) 0;text-align:left;background:none}
+.evRow:active{background:#F7F8FA}
+.evRow > .stageBadge{margin-top:1px}
+.evMain{flex:1;min-width:0}
+.evTop{display:flex;align-items:center;gap:var(--s2);min-width:0}
+.evCo{font:var(--t-item);color:var(--ink);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.evSub{display:block;margin-top:2px;font:var(--t-sub);color:var(--ink-3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evTail{flex:none;align-self:center;font:var(--t-meta);color:var(--ink-3);
+  text-align:right}
+.evTail.now{color:var(--danger)} .evTail.soon{color:#C4761C}
+.evRow.is-past{opacity:.45}
+.evRow.is-dropped{filter:grayscale(1);opacity:.4}
+
+/* variant — 목록 안에서 어떻게 나열되는가 */
+.evList{display:flex;flex-direction:column}
+.evList--flat > .evRow{padding-left:var(--page-x);padding-right:var(--page-x)}
+/* 구분선 대신 정렬축으로 나눈다. 선은 3개 이상 이어질 때만 아주 옅게 */
+.evList--inset > .evRow + .evRow{box-shadow:inset 0 1px 0 var(--line)}
+
+/* ── AppCard — 지원 건 하나 ── */
+/* 카드 사이에 선을 긋지 않는다. 왼쪽 정렬축과 여백으로 나눈다 (GPT #4) */
+.appCard{position:relative;background:var(--surface)}
+.acHit{display:block;width:100%;text-align:left;padding:var(--s3) var(--page-x)}
+.acHit:active{background:#F7F8FA}
+.appCard::before{content:'';position:absolute;left:0;top:var(--s3);bottom:var(--s3);
+  width:3px;border-radius:0 3px 3px 0;background:transparent}
+.appCard.imp-splus::before{background:var(--ink)}
+.appCard.imp-s::before{background:var(--ink-4)}
+.acTop{display:flex;align-items:center;gap:var(--s2);min-width:0}
+.acCo{font:var(--t-sec);color:var(--ink);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.acRole{margin-top:2px;font:var(--t-sub);color:var(--ink-3)}
+.acMeta{display:flex;align-items:center;gap:var(--s2);margin-top:var(--s2)}
+.appCard.is-dropped .acCo,.appCard.is-dropped .acRole{color:var(--ink-3)}
+.acTop{display:flex}
+.acRole{display:block}
+.acNext{font:var(--t-sub);color:var(--ink-2);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.acDd{margin-left:auto;flex:none;font:var(--t-meta);color:var(--ink-3)}
+.acDd.soon{color:#C4761C} .acDd.now{color:var(--danger)}
+.acStale{padding:var(--s2) var(--page-x) var(--s3);font:var(--t-meta);color:#8A5B00}
+
+/* ── SectionHead ── */
+.secHead{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);
+  padding:var(--s5) var(--page-x) var(--s3)}
+.secHead h2{font:var(--t-sec);color:var(--ink)}
+.secHead .secAct{font:var(--t-meta);color:var(--link)}
+
+/* ── MenuRow — 이동/토글. 목록이 길어서 여기만 hairline 을 허용 ── */
+.menuRow{display:flex;align-items:center;gap:var(--s3);width:100%;text-align:left;
+  min-height:var(--tap-min);padding:var(--s3) var(--page-x);background:var(--surface)}
+.menuRow:active{background:#F7F8FA}
+.menuRow + .menuRow{box-shadow:inset var(--page-x) 1px 0 -19px var(--line)}
+.mrMain{flex:1;min-width:0}
+.mrT{font:var(--t-item);color:var(--ink)}
+.mrS{margin-top:2px;font:var(--t-sub);color:var(--ink-3)}
+.menuRow--lead .mrT{font:var(--t-sec)}
+.menuRow.is-danger .mrT{color:var(--danger)}
+
+/* ── NoticeBar — 얇은 상태 알림 ── */
+.noticeBar{display:flex;align-items:center;gap:var(--s2);width:100%;text-align:left;
+  min-height:var(--tap-min);padding:var(--s3) var(--page-x);
+  font:var(--t-sub);color:var(--ink-2);background:var(--surface);
+  box-shadow:inset 0 -1px 0 var(--line)}
+.noticeBar.is-warn{background:#FFFBF0;color:#8A5B00}
+.noticeBar.is-err{background:#FFF4F4;color:#B3261E}
+.noticeBar > span:first-of-type{flex:1;min-width:0}
+
+/* ── EmptyState ── */
+.emptyState{padding:var(--s6) var(--page-x);text-align:center;
+  font:var(--t-sub);color:var(--ink-3)}
+
+/* ── 섹션 전환: 선이 아니라 8px 바닥색 띠로 나눈다 ── */
+.sep{height:var(--s2);background:var(--bg)}
+
+/* ── SearchFilterBar (primitive) — 알약(999)은 상태 칩 전용이므로 여기선 안 쓴다 ── */
+.stickyTools{padding:var(--s3) var(--page-x) var(--s2);margin-bottom:0;
+  border-bottom:1px solid var(--line)}
+.searchWrap input{height:var(--control);border-radius:var(--r2);
+  font:var(--t-sub);font-size:13px;padding:0 var(--s4) 0 36px;background:#F2F4F6}
+.searchIcon{left:var(--s3);width:17px;height:17px}
+.chipRow{gap:var(--s2);margin-top:var(--s2)}
+.chip2,.selChip{height:var(--control-sm);border-radius:var(--r1);
+  font:var(--t-meta);color:var(--ink-2);background:#F2F4F6}
+.chip2{padding:0 var(--s3);gap:var(--s1)}
+.chip2.on{background:var(--action);color:#fff}
+.selChip{padding:0 26px 0 var(--s3);background-position:right var(--s2) center;background-size:14px}
+.resetBtn{height:var(--control-sm);padding:0 var(--s2);font:var(--t-meta);color:var(--ink-3)}
+
+/* ── 홈·캘린더의 EventRow 배치 ── */
+#upcoming .evRow{padding-left:var(--page-x);padding-right:var(--page-x)}
+#calList .calDay > .evRow{padding-left:0;padding-right:0}
+#calList .calDay{padding:0 var(--page-x)}
+
+/* ── Hero (홈 «지금 해야 할 것») ── */
+.hero{border-radius:var(--r3)}
+.heroTitle{font:var(--t-hero)}
+.heroWhen{font:var(--t-sub);font-weight:700}
+.heroSub{font:var(--t-sub);color:var(--ink-3)}
+
+/* ── 섹션 헤더·푸터 문구 ── */
+.blockHead h2{font:var(--t-sec)}
+.footNote{font:var(--t-sub);color:var(--ink-3);padding:var(--s4) var(--page-x) var(--s2)}
+.calListH{font:var(--t-meta);color:var(--ink-3);padding:var(--s4) var(--page-x) var(--s2)}
+.calDayH{font:var(--t-item);padding:var(--s3) 0 var(--s1)}
+.calDayH span{font:var(--t-meta);color:var(--ink-3)}
+.dow{font:var(--t-meta);color:var(--ink-3)}
+.date{font:var(--t-meta)}
+.pastFold > summary{font:var(--t-meta);color:var(--ink-3);padding:var(--s3) var(--page-x)}
+
+/* ── Hero: 테두리 대신 바닥색으로 «떠 있음» 을 만든다 (윤곽선 + 좌측바 이중 강조 제거) ── */
+.hero{border:0;background:#F7F8FA;padding:var(--s4);gap:var(--s3);border-radius:var(--r3)}
+.hero:active{background:#F1F3F5}
+.hero.imp-splus{box-shadow:inset 3px 0 0 var(--ink)}
+.hero.imp-s{box-shadow:inset 3px 0 0 var(--ink-4)}
+.heroTitle{margin-bottom:var(--s1)}
+.heroWhen{color:var(--ink-2)}
+.heroSub{margin-top:var(--s1)}
+.hero .tierMark,.hero .tier{margin-top:var(--s1)}
+
+/* ── 지원 현황: 알약 금지, 배지 모서리(r1) ── */
+.funnel{gap:var(--s2)}
+.fstat{padding:var(--s2) var(--s3);border-radius:var(--r1);gap:var(--s1)}
+.fstat b{font:var(--t-item);font-weight:800}
+.fstat span{font:var(--t-meta)}
+.fstat.on{background:var(--action)}
+
+/* EventRow 앞자리 — 폭이 고정된 전형 색 점. 회사명 정렬축을 지킨다 */
+.evDot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:7px;display:block}
+.evDot.st-open{background:#8B95A1}   .evDot.st-info{background:#E0A21A}
+.evDot.st-apply{background:#4A7DD6}  .evDot.st-result{background:#7A5AF8}
+.evDot.st-test{background:#E2803C}   .evDot.st-inter{background:#DB4B4B}
+.evDot.st-final{background:#16A15E}  .evDot.st-cert{background:#12968A}
+.evRow{gap:var(--s2)}
+.evSub{white-space:normal}
+
+/* ══ 남은 레거시 클래스를 토큰 위로 올린다 (임의 px 제거) ══ */
+
+/* MenuRow — 더보기. 목록이 길어 여기만 hairline 을 허용, 글자 시작점에서 긋는다 */
+.row{min-height:var(--tap-min);padding:var(--s3) var(--page-x);border-bottom:0;gap:var(--s3)}
+.block .row + .row{box-shadow:inset var(--page-x) 1px 0 -19px var(--line)}
+.rowT{font:var(--t-item)}
+.rowS{margin-top:2px;font:var(--t-sub);color:var(--ink-3)}
+.rowLead{min-height:60px}
+.rowLead .rowT{font:var(--t-sec)}
+.rowLead .rowS{font:var(--t-sub)}
+.blockHead{margin-bottom:var(--s2)}
+.block{padding:var(--s4) var(--page-x) var(--s2)}
+.block .row{padding-left:0;padding-right:0}
+.block .row + .row{box-shadow:inset 0 1px 0 var(--line)}
+
+/* NoticeBar */
+.banner{padding:var(--s3) var(--page-x);min-height:var(--tap-min);
+  font:var(--t-sub);gap:var(--s2)}
+.syncBar{padding:var(--s3) var(--page-x);min-height:var(--tap-min);font:var(--t-sub)}
+
+/* EmptyState */
+.empty{padding:var(--s6) var(--page-x);font:var(--t-sub);color:var(--ink-3);text-align:center}
+.empty b{display:block;font:var(--t-item);color:var(--ink-2);margin-bottom:var(--s1)}
+
+/* ActionButton (primitive) */
+.btn{height:var(--input);padding:0 var(--s4);border-radius:var(--r2);
+  font:var(--t-item);gap:var(--s1)}
+.btn.sm{height:var(--tap-min);padding:0 var(--s3);font:var(--t-meta);border-radius:var(--r1)}
+.btn.full{margin:var(--s2) 0 var(--s3)}
+.btnPrimary{background:var(--action);color:#fff}
+.btnText{height:auto;padding:0 var(--s1);font:var(--t-meta);color:var(--ink-3)}
+
+/* 검토함 카드 */
+.inCard{padding:var(--s4) var(--page-x)}
+.inCo{font:var(--t-sec)}
+.inRole{margin-top:2px;font:var(--t-sub);color:var(--ink-3)}
+.inNote,.inSec p{font:var(--t-sub);color:var(--ink-2)}
+.inSec b{font:var(--t-meta);color:var(--ink-3)}
+.inBtns{gap:var(--s2);margin-top:var(--s3)}
+
+/* AppBar / BottomNav (primitive) */
+.appbarTitle h1{font:var(--t-title)}
+.appbarTitle p{font:var(--t-meta);color:var(--ink-3)}
+.tab span{font:var(--t-meta);font-size:12px}
+.txtBtn{height:var(--control-sm);padding:0 var(--s3);border-radius:var(--r1);font:var(--t-meta)}
+
+/* BottomSheet (primitive) */
+.sheetHead h3{font:var(--t-sec)}
+.fieldNote{font:var(--t-sub);color:var(--ink-3)}
+.field > span{font:var(--t-meta);color:var(--ink-3)}
+.field input,.field select,.field textarea{min-height:var(--input);border-radius:var(--r2);
+  font:var(--t-item);font-weight:500}
+
+/* ?ui=1 컴포넌트 전시 */
+.uiGallery{max-width:560px;margin:0 auto;background:var(--bg);padding-bottom:var(--s6)}
+.uiHead{padding:var(--s5) var(--page-x) var(--s4);background:var(--surface)}
+.uiHead b{display:block;font:var(--t-sec)}
+.uiHead span{display:block;margin-top:var(--s1);font:var(--t-sub);color:var(--ink-3)}
+.uiSec{margin-top:var(--s2)}
+.uiSec h3{padding:var(--s4) var(--page-x) var(--s2);font:var(--t-meta);color:var(--ink-3)}
+.uiBox{background:var(--surface);padding:var(--s3) 0}
+.uiSec .stageBadge,.uiSec .tierMark,.uiSec .statusChip{margin:0 var(--s1) var(--s2) 0}
+.uiBox > .stageBadge:first-child,.uiSec h3 + .uiBox{padding-left:0}
+.uiBox{padding-left:0;padding-right:0}
+.uiSec .uiBox > .stageBadge,.uiSec .uiBox > .tierMark,.uiSec .uiBox > .statusChip{margin-left:var(--page-x)}
+.uiSec .evList > .evRow{padding-left:var(--page-x);padding-right:var(--page-x)}
+
+/* ── 어학·자격 (v8.1) ── */
+.qCard{background:#F7F8FA;border-radius:var(--r2);padding:var(--s3);margin-bottom:var(--s2)}
+.qHead{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2)}
+.qHead select{flex:1;min-width:0;height:var(--control);border:0;border-radius:var(--r1);
+  background:#fff;padding:0 var(--s3);font:var(--t-item)}
+.qDel{width:var(--control-sm);height:var(--control-sm);border-radius:var(--r1);
+  display:flex;align-items:center;justify-content:center;color:var(--ink-3);flex:none}
+.qDel svg{width:16px;height:16px}
+.qGrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2)}
+.qGrid label{display:block;min-width:0}
+.qGrid label:nth-child(5){grid-column:1 / -1}
+.qGrid span{display:block;margin-bottom:var(--s1);font:var(--t-meta);color:var(--ink-3)}
+.qGrid input{width:100%;height:var(--control);border:0;border-radius:var(--r1);
+  background:#fff;padding:0 var(--s3);font:var(--t-sub)}
+
+/* 판정 배지 — 4종 */
+.egBadge{display:inline-flex;align-items:center;height:20px;padding:0 var(--s2);
+  border-radius:var(--r1);font:var(--t-meta);margin-left:var(--s1)}
+.egBadge.eg-ok{background:#E6F6EC;color:var(--ok)}
+.egBadge.eg-short{background:#FDECEC;color:var(--danger)}
+.egBadge.eg-wait{background:#FFF4E0;color:#8A5B00}
+.egBadge.eg-check{background:#EEF1F5;color:var(--ink-2)}
+.egWhy{margin-top:var(--s1);font:var(--t-meta);color:var(--ink-3)}
+
+/* StatusChip — 지원예정은 아직 아무 action 이 없으므로 outline, 불합격은 죽인 filled */
+.statusChip{background:none;box-shadow:inset 0 0 0 1px var(--line-strong);color:var(--ink-2)}
+.statusChip.is-live{background:var(--action);color:#fff;box-shadow:none}
+.statusChip.is-done{background:#E6F6EC;color:var(--ok);box-shadow:none}
+.statusChip.is-fail{background:#EDEFF3;color:var(--ink-3);box-shadow:none;opacity:.85}
+.statusChip.is-hold{background:#FFF4E0;color:#8A5B00;box-shadow:none}
+
+/* ── 종료 제안 (v8.1) — 승인 전에는 아무것도 바뀌지 않는다 ── */
+.opBox{background:var(--surface);margin-bottom:var(--s2);padding:var(--s4) var(--page-x) var(--s3)}
+.opHead b{display:block;font:var(--t-sec)}
+.opHead span{display:block;margin-top:var(--s1);font:var(--t-sub);color:var(--ink-3)}
+.opRow{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;
+  box-shadow:inset 0 -1px 0 var(--line)}
+.opMain{flex:1;min-width:0}
+.opCo{font:var(--t-item)}
+.opRole{margin-top:2px;font:var(--t-sub);color:var(--ink-3)}
+.opBtns{display:flex;gap:var(--s2);flex:none}
+
+/* 지원 상세 «수정» — 삭제와 묶지 않고 헤더에 둔다 */
+.apEditBtn{margin-left:auto;flex:none;height:var(--control-sm);padding:0 var(--s3);
+  border-radius:var(--r1);background:#F2F4F6;color:var(--ink-2);font:var(--t-meta)}
+.apEditBtn:active{background:#E6E9ED}
+.emptyMore{display:block;margin-top:var(--s2)}
+/* 온보딩 위에 시트가 뜬다 */
+.scrim{z-index:95}
+
+/* v8.1.18 — Pretendard readability tuning
+   굵기와 자간을 절제해 모바일에서 오래 읽어도 편안한 위계를 만든다. */
+.obTitle,.heroTitle,.naD,.fchip b,.stat b,.fstat b{
+  font-weight:700;letter-spacing:-.015em
+}
+.appbarTitle h1,.blockHead h2,.secHead h2,.sheetHead h3,
+.uiHead b,.opHead b,.inCo,.acCo{
+  font-weight:650;letter-spacing:-.01em
+}
+.naTitle,.arCo,.jrCo,.dbCo,.apCo,.up2Co,.dayCo,
+.rowLead .rowT,.menuRow--lead .mrT{
+  font-weight:600;letter-spacing:-.008em
+}
+.tab span,.rowS,.inRole,.apL2,.apL3,.heroWhen,.up2Sub,.daySub{
+  letter-spacing:0
+}
+.stBadge,.stageBadge,.tierMark,.statusChip,.dday,.badge,.egBadge{
+  font-weight:600;letter-spacing:0
+}

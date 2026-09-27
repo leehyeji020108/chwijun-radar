@@ -1,0 +1,26 @@
+{
+  "id": "/",
+  "name": "취준 Radar",
+  "short_name": "취준Radar",
+  "description": "2026 하반기 취업 지원·전형·마감 일정 통합 관리",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#f6f7fb",
+  "theme_color": "#111827",
+  "categories": ["productivity", "business"],
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "일정 추가", "short_name": "추가", "url": "./?action=add", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "지원관리", "short_name": "지원관리", "url": "./?tab=apps" }
+  ]
+}

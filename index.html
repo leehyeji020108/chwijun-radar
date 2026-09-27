@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>취준 Radar</title>
+<meta name="description" content="2026 하반기 취업 지원·전형·마감 통합 관리">
+<meta name="theme-color" content="#ffffff">
+<meta name="color-scheme" content="light">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="취준Radar">
+<meta name="format-detection" content="telephone=no">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<link rel="stylesheet" href="./styles.css?v=8.1.25">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─────────── 앱바 ─────────── -->
+  <header class="appbar" id="appbar">
+    <button class="iconBtn back" id="backBtn" hidden aria-label="뒤로">
+      <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+    </button>
+    <div class="appbarTitle">
+      <h1 id="abTitle">취준 Radar</h1>
+      <p id="abSub"></p>
+    </div>
+    <div class="appbarActions" id="abActions">
+      <button class="iconBtn" id="installBtn" aria-label="앱 설치" hidden>
+        <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v3h16v-3"/></svg>
+      </button>
+      <button class="txtBtn" id="todayBtn" hidden>오늘</button>
+      <button class="iconBtn" id="addBtn" aria-label="일정 추가" hidden>
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ─────────── 본문 ─────────── -->
+<div class="saveErr" id="saveErr" role="alert" hidden></div>
+  <main class="body" id="body">
+
+    <!-- 홈 -->
+    <section class="screen" id="s-home">
+      <div class="banner" id="inboxAlert" aria-live="polite" hidden></div>
+      <button class="syncBar" id="syncBar" aria-live="polite" hidden>
+        <span class="syncdot" id="syncDot"></span>
+        <span class="syncBarT" id="syncText"></span>
+        <span class="chev"></span>
+      </button>
+
+      <div class="block">
+        <div class="blockHead"><h2>지금 해야 할 것</h2></div>
+        <div id="nextAction"></div>
+      </div>
+
+      <div class="block">
+        <div class="blockHead"><h2>지원 현황</h2></div>
+        <div id="funnel" class="funnel"></div>
+      </div>
+
+      <div class="block">
+        <div class="blockHead"><h2>그다음 일정</h2></div>
+        <div class="list" id="upcoming"></div>
+      </div>
+
+    </section>
+
+    <!-- 캘린더 -->
+    <section class="screen" id="s-cal" hidden>
+      <div class="calBar">
+        <button class="iconBtn sm" id="prevMonth" aria-label="이전 달"><svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg></button>
+        <h2 id="calTitle">2026년 9월</h2>
+        <button class="iconBtn sm" id="nextMonth" aria-label="다음 달"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+      <div class="calWrap"><div id="calendar" class="calendar"></div></div>
+      <!-- 월 격자는 «언제 몰려 있나», 아래 목록은 «무엇인가».
+           목록을 상주시켜서 누르지 않아도 회사·전형·시간이 바로 보이게 한다. -->
+      <div class="calList" id="calList"></div>
+      <p class="footNote">지원이 종료된 뒤의 예정 일정은 숨겨집니다.</p>
+    </section>
+
+    <!-- 지원 관리 -->
+    <section class="screen" id="s-apps" hidden>
+      <div class="stickyTools">
+        <div class="searchWrap">
+          <svg class="searchIcon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="search" placeholder="회사·직무 검색" autocapitalize="off">
+          <button class="clearBtn" id="searchClear" hidden aria-label="검색어 지우기">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+          </button>
+        </div>
+        <div class="chipRow">
+          <input type="hidden" id="pipeFilter" value="">
+          <select id="tierFilter" class="selChip">
+            <option value="">전체 중요도</option><option>S+</option><option>S</option>
+            <option>A+</option><option>A</option><option>WATCH</option>
+          </select>
+          <span class="chipGroup" id="pipeChips"></span>
+          <button class="resetBtn" id="filterReset" hidden>초기화</button>
+        </div>
+      </div>
+      <div class="list list--apps" id="appCards"></div>
+    </section>
+
+    <!-- 새 공고 -->
+    <section class="screen" id="s-inbox" hidden>
+      <div class="radarStatus" id="radarStatus" role="status" aria-live="polite"><b>채용 레이더 확인 중</b><span>기기간 동기화와 별도입니다</span></div>
+      <p class="lead">가져온 공고는 <b>여기서 확인한 뒤에만</b> 지원 Radar에 들어갑니다. 제외한 회사·직무의 공고는 다음부터 자동으로 걸러집니다.</p>
+      <!-- GPT 가 «이건 이제 빼라» 고 제안한 건. 앱이 자동으로 지우지 않는다 — 여기서 승인해야 반영된다 -->
+      <div id="outProposals"></div>
+      <div class="list list--inbox" id="inboxList"></div>
+      <details class="inboxManage"><summary>제외 목록 관리</summary>
+        <button class="btn btnText" id="clearDropBtn">제외 목록 초기화</button>
+      </details>
+    </section>
+
+    <!-- 더보기 -->
+    <section class="screen" id="s-more" hidden>
+
+      <!-- 분석 화면 -->
+      <div class="block blockLead">
+        <button class="row rowBtn rowLead" data-go="radar">
+          <div class="rowMain"><div class="rowT">커리어 레이더</div><div class="rowS">지원 건을 중요도순으로</div></div><span class="chev"></span>
+        </button>
+        <button class="row rowBtn rowLead" data-go="db">
+          <div class="rowMain"><div class="rowT">퍼스널 기업 DB</div><div class="rowS">668 Universe · TOP60 스냅샷</div></div><span class="chev"></span>
+        </button>
+      </div>
+
+      <div class="block">
+        <div class="blockHead"><h2>연결·백업</h2></div>
+        <button class="row rowBtn" id="badgeBtn" role="switch" aria-checked="false">
+          <div class="rowMain"><div class="rowT">앱 아이콘 알림 숫자</div><div class="rowS" id="badgeSum">검토 대기 공고 수를 아이콘에 표시</div></div>
+          <span class="switch" aria-hidden="true"></span>
+        </button>
+        <button class="row rowBtn" id="syncBtn">
+          <div class="rowMain"><div class="rowT">휴대폰과 연결</div><div class="rowS" id="syncSum">선택사항 · 연결 코드로 PC와 휴대폰 연결</div></div><span class="chev"></span>
+        </button>
+        <button class="row rowBtn" id="icsBtn">
+          <div class="rowMain"><div class="rowT">캘린더 앱으로 내보내기</div><div class="rowS">아이폰·구글 캘린더에 넣으면 마감 하루 전·3시간 전 알림이 옵니다</div></div><span class="chev"></span>
+        </button>
+        <button class="row rowBtn" id="exportBtn">
+          <div class="rowMain"><div class="rowT">백업 내려받기</div><div class="rowS">JSON 파일로 저장</div></div><span class="chev"></span>
+        </button>
+        <label class="row rowBtn" for="importFile">
+          <div class="rowMain"><div class="rowT">백업 불러오기</div><div class="rowS">저장해둔 JSON 열기</div></div><span class="chev"></span>
+        </label>
+        <input id="importFile" type="file" accept="application/json" hidden>
+      </div>
+
+      <div class="block">
+        <div class="blockHead"><h2>내 정보</h2></div>
+        <button class="row rowBtn" id="qualBtn">
+          <div class="rowMain"><div class="rowT">내 어학·자격</div><div class="rowS" id="qualSum">등록된 성적이 없습니다</div></div><span class="chev"></span>
+        </button>
+        <button class="row rowBtn" id="editProfileBtn">
+          <div class="rowMain"><div class="rowT">지원 기준 수정</div><div class="rowS" id="obName">희망 직무·가치축·제외 규칙</div></div><span class="chev"></span>
+        </button>
+        <button class="row rowBtn" id="pdbToggle" role="switch" aria-checked="false">
+          <div class="rowMain"><div class="rowT">퍼스널 기업 DB 사용</div><div class="rowS">직접 구축한 기업 DB가 있을 때만</div></div>
+          <span class="switch" aria-hidden="true"></span>
+        </button>
+        <button class="row rowBtn" id="recoverBtn" hidden>
+          <div class="rowMain"><div class="rowT">자동 사본으로 되돌리기</div><div class="rowS"></div></div><span class="chev"></span>
+        </button>
+      </div>
+
+
+      <!-- 파괴적 액션은 같은 무게로 상주하면 안 된다. 한 번 펼쳐야 보인다. -->
+      <details class="block dangerZone" id="dangerZone">
+        <summary>데이터 지우기</summary>
+        <button class="row rowBtn danger" id="wipeBtn">
+          <div class="rowMain"><div class="rowT">일정·검토함 지우기</div><div class="rowS">지원 데이터만 비우고 내 기준(설문)은 유지</div></div><span class="chev"></span>
+        </button>
+        <button class="row rowBtn danger" id="handoffBtn">
+          <div class="rowMain"><div class="rowT">완전 초기화 (남에게 넘기기)</div><div class="rowS">설문·동기화 설정까지 전부 지우고 처음 설치 상태로</div></div><span class="chev"></span>
+        </button>
+      </details>
+
+      <p class="footNote">취준 Radar v8.1.25 · 2026 하반기</p>
+    </section>
+
+    <!-- 커리어 레이더 (더보기 하위) -->
+    <section class="screen" id="s-radar" hidden>
+      <div class="list list--radar" id="radar"></div>
+    </section>
+
+    <!-- 퍼스널 DB (더보기 하위) -->
+    <section class="screen" id="s-db" hidden>
+      <div class="statRow">
+        <div class="stat"><b>668</b><small>Universe</small></div>
+        <div class="stat"><b>29</b><small>1A 핵심</small></div>
+        <div class="stat"><b>35</b><small>1B 도전</small></div>
+        <div class="stat"><b>57</b><small>검증형</small></div>
+      </div>
+      <div class="stickyTools">
+        <div class="searchWrap">
+          <svg class="searchIcon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="dbSearch" placeholder="기업·추천직무 검색" autocapitalize="off">
+        </div>
+        <div class="chipRow">
+          <select id="dbStage" class="selChip">
+            <option value="">전체 단계</option><option>1A 지금 핵심</option>
+            <option>1B 지금 도전</option><option>확장 타깃</option>
+          </select>
+          <select id="dbPath" class="selChip"><option value="">전체 경로</option></select>
+          <select id="dbSort" class="selChip">
+            <option value="score">실행우선순</option><option value="axes">내 평가축순</option>
+            <option value="rank">원본순위</option><option value="company">가나다순</option>
+          </select>
+          <select id="dbExcl" class="selChip">
+            <option value="hide">제외 숨김</option><option value="show">제외 포함</option>
+          </select>
+        </div>
+      </div>
+      <div class="list list--db" id="dbList"></div>
+      <a class="srcLink" href="https://docs.google.com/spreadsheets/d/1xKLufMM-lP2eA-kR6cHPjDyfbPI--oUw6YXENkMM-jM/edit" target="_blank" rel="noopener">전체 668 원본 열기 ↗</a>
+      <p class="footNote">TOP60은 2026-07 딥리서치 스냅샷입니다. 현재 보정(BEN·관심도)은 별도 태그로 표시되고, 산업 관심도 하나로 순위를 정하지 않도록 평가축을 직접 채점할 수 있습니다.</p>
+    </section>
+
+  </main>
+
+  <!-- ─────────── 하단 탭바 ─────────── -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab active" data-tab="home">
+      <svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/></svg><span>홈</span>
+    </button>
+    <button class="tab" data-tab="cal">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>캘린더</span>
+    </button>
+    <button class="tab" data-tab="apps">
+      <svg viewBox="0 0 24 24"><path d="M4 7h10M4 12h10M4 17h7"/><path d="M17.5 15.5l1.8 1.8 3.2-3.6"/></svg><span>지원</span>
+    </button>
+    <button class="tab" data-tab="inbox">
+      <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 10-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 003 0"/></svg><span>새 공고</span>
+      <i class="tabBadge" id="tabBadge" hidden></i>
+    </button>
+    <button class="tab" data-tab="more">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg><span>더보기</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ─────────── 바텀시트: 일정 추가·수정 ─────────── -->
+<div class="scrim" id="modalBg" inert aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="sheetGrip"></div>
+    <div class="sheetHead">
+      <h3 id="modalTitle">일정 추가</h3>
+      <button class="iconBtn sm" id="cancelBtn" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <form id="form" class="sheetBody">
+      <input id="fid" type="hidden">
+      <p class="fieldNote">지원 건의 <b>상태와 진행률은 각 전형의 결과에서 자동 계산</b>됩니다. 여기서는 이 일정 하나만 다룹니다.</p>
+      <div class="fields">
+        <label class="field full"><span>회사</span><input id="fcompany" required></label>
+        <label class="field full"><span>직무</span><input id="frole" required></label>
+        <label class="field"><span>중요도</span><select id="ftier"><option>S+</option><option>S</option><option>A+</option><option>A</option><option>WATCH</option></select></label>
+        <label class="field"><span>전형 단계</span><select id="fstage"></select></label>
+        <label class="field"><span>날짜</span><input id="fdate" type="date" required></label>
+        <label class="field"><span>시간</span><input id="ftime" type="time"></label>
+        <label class="field full"><span>이 전형의 결과</span><select id="fresult"></select></label>
+        <label class="field full"><span>영어·자격 요건</span><input id="fenglish" placeholder="예: OPIc IH 이상"></label>
+        <label class="field full"><span>채용 링크</span><input id="furl" type="url" placeholder="https://" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+        <label class="field full"><span>메모</span><textarea id="fnote" rows="3"></textarea></label>
+      </div>
+    </form>
+    <div class="sheetFoot">
+      <button type="button" class="btn btnGhost danger" id="deleteBtn" hidden>삭제</button>
+      <a class="btn btnGhost" id="openUrlBtn" href="#" target="_blank" rel="noopener" hidden>채용 페이지 ↗</a>
+      <button type="submit" form="form" class="btn btnPrimary grow">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────── 바텀시트: 동기화 ─────────── -->
+<div class="scrim" id="syncBg" inert aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="syncTitle">
+    <div class="sheetGrip"></div>
+    <div class="sheetHead"><h3 id="syncTitle">PC ↔ 휴대폰 동기화</h3>
+      <button class="iconBtn sm" id="syncCancel" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheetBody">
+      <p class="fieldNote">지원상태·일정·메모·평가축이 기기끼리 자동으로 맞춰집니다.
+      데이터는 <b>이 비밀키로 브라우저에서 암호화</b>된 뒤 올라가고, 서버에는 암호문만 남습니다.
+      비밀키는 이 기기에만 저장되니 <b>잃어버리면 복구할 수 없습니다.</b>
+      다른 사람과 키를 공유하지 마세요 — 이 키가 곧 내 계정입니다.</p>
+      <div class="fields">
+        <label class="field full"><span>내 동기화 비밀키 (20자 이상)</span>
+          <input id="sRoom" placeholder="새 비밀키 만들기를 눌러주세요" autocapitalize="off" autocorrect="off" spellcheck="false">
+        </label>
+      </div>
+      <div class="stepA" style="margin-top:12px">
+        <button type="button" class="btn btnGhost" id="syncGen">새 비밀키 만들기</button>
+        <button type="button" class="btn btnGhost" id="syncCopy">연결 코드 복사</button>
+      </div>
+      <details class="guide">
+        <summary>다른 기기 연결하기</summary>
+        <p>먼저 연결한 기기에서 <b>연결 코드 복사</b>를 누르고, 그 코드를 여기에 붙여넣으세요.</p>
+        <textarea id="sPair" rows="3" placeholder="연결 코드 붙여넣기"></textarea>
+        <button type="button" class="btn btnGhost full" id="syncPairApply">연결 코드 불러오기</button>
+      </details>
+      <p class="fieldNote" id="storeLabel"></p>
+    </div>
+    <div class="sheetFoot">
+      <button type="button" class="btn btnGhost danger" id="syncOff">끄기</button>
+      <button type="button" class="btn btnPrimary grow" id="syncSave">저장하고 연결</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ─────────── 바텀시트: 지원 정보 수정 ─────────── -->
+<div class="scrim" id="edBg" inert aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="sheetGrip"></div>
+    <div class="sheetHead"><h3 id="editTitle">지원 정보 수정</h3>
+      <button class="iconBtn sm" id="edClose" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheetBody">
+      <p class="fieldNote">이 지원 건의 <b>회사·직무·중요도</b>를 바꿉니다.
+      전형 일정·결과·메모는 그대로 이 지원 건에 남습니다. 새 지원 건이 생기지 않습니다.</p>
+      <div class="fields">
+        <label class="field full"><span>회사</span><input id="edCompany" required></label>
+        <label class="field full"><span>직무</span><input id="edRole" required></label>
+        <label class="field full"><span>중요도</span>
+          <select id="edTier"><option>S+</option><option>S</option><option>A+</option><option>A</option><option>WATCH</option></select>
+        </label>
+      </div>
+      <p class="fieldNote" id="edWarn" role="alert" hidden></p>
+    </div>
+    <div class="sheetFoot">
+      <button type="button" class="btn btnGhost" id="edCancel">취소</button>
+      <button type="button" class="btn btnPrimary grow" id="edSave">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────── 바텀시트: 내 어학·자격 ─────────── -->
+<div class="scrim" id="qualBg" inert aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="qualTitle">
+    <div class="sheetGrip"></div>
+    <div class="sheetHead"><h3 id="qualTitle">내 어학·자격</h3>
+      <button class="iconBtn sm" id="qualClose" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheetBody">
+      <p class="fieldNote">공고의 어학 요건과 대조해 <b>어학 충족 · 어학 미달 · 어학 결과 대기 · 어학 확인 필요</b>를 표시합니다.
+      판정하는 건 <b>공인어학뿐</b>입니다 — 전공·자격증·학점 같은 요건은 공고 원문을 직접 보세요.
+      아직 결과가 안 나온 시험은 <b>점수를 비워두세요</b>. 발표일 전까지는 «결과 대기» 로 두고,
+      발표일이 지나면 «결과 입력 필요» 로 바뀝니다.</p>
+      <div id="qualList"></div>
+      <button type="button" class="btn btnGhost full" id="qualAdd">성적 추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────── 바텀시트: 공고 가져오기 ─────────── -->
+<!-- 동기화 충돌 -->
+<!-- 지원 상세 -->
+<div class="scrim" id="apBg" inert aria-hidden="true">
+  <div class="sheet sheetTall" role="dialog" aria-modal="true" aria-labelledby="apTitle">
+    <div class="sheetHead apSheetHead">
+      <div><h3 id="apTitle"></h3><p id="apSub"></p></div>
+      <button class="xBtn" id="apClose" aria-label="닫기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <!-- 배경 원 없이 아이콘만. 히트 영역은 44×44 유지 -->
+    </div>
+    <div class="sheetBody" id="apBody"></div>
+    <div class="sheetFoot apFoot">
+      <button class="btn btnPrimary full" id="apAddStage">+ 다음 전형 추가</button>
+      <div class="apFoot2">
+        <button class="btn btnGhost" id="apHold">보류하기</button>
+        <button class="btn btnGhost" id="apArchive">지원 종료</button>
+        <button class="btn btnGhost apMoreBtn" id="apMore" aria-label="더보기">···</button>
+      </div>
+      <div class="apMoreMenu" id="apMoreMenu" hidden>
+        <button class="apMoreItem danger" id="apDelete">지원 기록 완전 삭제</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="cfBg" inert aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cfTitle">
+    <div class="sheetHead"><h3 id="cfTitle">동기화 충돌</h3></div>
+    <div class="sheetBody" id="cfBody"></div>
+    <div class="sheetFoot cfFoot">
+      <button class="btn btnPrimary full" id="cfUseRemote">다른 기기 데이터 사용</button>
+      <button class="btn btnGhost full" id="cfUseLocal">이 기기 데이터로 덮어쓰기</button>
+      <button class="btn btnGhost full" id="cfCancel">나중에</button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="impBg" inert aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="impTitle">
+    <div class="sheetGrip"></div>
+    <div class="sheetHead"><h3 id="impTitle">레이더 결과 가져오기</h3>
+      <button class="iconBtn sm" id="impCancel" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheetBody">
+      <div class="impChk" id="radarFreshness"><b>아직 가져온 레이더 결과가 없습니다</b><span>기기간 동기화와 별도로 기록됩니다.</span></div>
+      <ol class="steps">
+        <li>
+          <div class="stepT">프롬프트를 GPT에 붙여넣고 실행</div>
+          <div class="stepA">
+            <button type="button" class="btn btnGhost" id="copyPromptBtn">프롬프트 복사</button>
+            <button type="button" class="btn btnText" id="viewPromptBtn">보기</button>
+          </div>
+          <textarea id="promptBox" rows="9" readonly hidden></textarea>
+        </li>
+        <li>
+          <div class="stepT">GPT가 만든 JSON을 가져오기</div>
+          <button type="button" class="btn btnGhost full" id="clipboardImportBtn">클립보드에서 바로 가져오기</button>
+          <textarea id="impBox" rows="6" placeholder='[{"company":"기아","role":"SDV 전략기획","tier":"S","schedule":[{"stage":"apply","date":"2026-09-29","time":"11:00"}]}]'></textarea>
+          <div id="impResult"></div>
+        </li>
+      </ol>
+      <button class="btn btnGhost full" id="importBtn" hidden>공고 가져오기</button>
+    </div>
+    <div class="sheetFoot">
+      <button type="button" class="btn btnPrimary grow" id="impRun">가져오기</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ─────────── 온보딩 ─────────── -->
+<div class="onboard" id="onboard" hidden>
+  <div class="obBar">
+    <button class="iconBtn sm" id="obBack" hidden aria-label="이전"><svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg></button>
+    <div class="obProg"><span id="obProgFill"></span></div>
+    <span class="obStep" id="obStepNo"></span>
+  </div>
+  <div class="obBody" id="obBody"></div>
+  <div class="obFoot">
+    <button class="btn btnGhost" id="obSkip" hidden>건너뛰기</button>
+    <button class="btn btnPrimary grow" id="obNext">시작하기</button>
+  </div>
+</div>
+
+<div class="undoBar" id="undoBar" hidden></div>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<script src="./data.js?v=8.1.25"></script>
+<script src="./app.js?v=8.1.25"></script>
+</body>
+</html>

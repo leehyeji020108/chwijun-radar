@@ -1,0 +1,12 @@
+node_modules/
+.vercel/
+.vercel-static/
+.env
+.env.*
+!.env.example
+*.log
+playwright-report/
+test-results/
+backups/
+*backup*.json
+CODEX_TASK.md
